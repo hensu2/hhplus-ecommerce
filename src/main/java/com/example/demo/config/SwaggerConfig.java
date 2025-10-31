@@ -13,11 +13,11 @@ public class SwaggerConfig {
     public OpenAPI openAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Demo API")
-                        .description("Spring Boot REST API Documentation")
+                        .title("hhplus-ecommerce API")
+                        .description("Spring Boot ecommerce REST API Documentation")
                         .version("1.0.0")
                         .contact(new Contact()
-                                .name("Developer")
-                                .email("dev@example.com")));
+                                .name("hensu2")
+                                .email("hensu2@naver.com")));
     }
 }
