@@ -109,9 +109,9 @@ sequenceDiagram
         CouponService-->>OrderService: 할인 금액
     end
 
-    alt 포인트 사용
-        OrderService->>PointService: usePoint(userId, point)
-        PointService->>DB: 포인트 차감
+    alt 포인트 할인 사용
+        OrderService->>PointService: deductPointDiscount(userId, point)
+        PointService->>DB: 포인트 할인 차감
         DB-->>PointService: 완료
         PointService-->>OrderService: 차감 완료
     end
@@ -147,12 +147,12 @@ sequenceDiagram
     PaymentService->>PointService: deductPoint(userId, amount)
 
     alt 포인트 충분
-        PointService->>DB: 포인트 차감
+        PointService->>DB: 포인트 차감<br/>INSERT POINT_HISTORY (type='USE', description='주문 결제')
         DB-->>PointService: 완료
         PointService-->>PaymentService: 차감 완료
 
         PaymentService->>Repository: 결제 정보 저장
-        Repository->>DB: 결제 저장
+        Repository->>DB: 결제 저장<br/>(payment_method='POINT', status='SUCCESS',<br/>earned_point=amount*0.01)
         DB-->>Repository: 완료
         Repository-->>PaymentService: Payment
 
@@ -162,7 +162,7 @@ sequenceDiagram
         Repository-->>PaymentService: 완료
 
         PaymentService->>PointService: earnPoint(userId, amount * 0.01)
-        PointService->>DB: 포인트 적립
+        PointService->>DB: 포인트 적립<br/>INSERT POINT_HISTORY (type='EARN', description='결제 적립')
         DB-->>PointService: 완료
         PointService-->>PaymentService: 적립 완료
 
@@ -248,25 +248,22 @@ sequenceDiagram
     actor Client
     participant ProductController
     participant ProductService
-    participant OrderItemRepository
+    participant ProductStatisticsRepository
     participant ProductRepository
     participant DB
 
     Client->>ProductController: GET /api/products/popular
     ProductController->>ProductService: getPopularProducts()
-    ProductService->>OrderItemRepository: findPopularProducts(3days, limit=5)
-    OrderItemRepository->>DB: SELECT product_id, COUNT(*) as count<br/>FROM ORDER_ITEMS<br/>WHERE created_at >= NOW() - INTERVAL 3 DAY<br/>GROUP BY product_id<br/>ORDER BY count DESC LIMIT 5
-    DB-->>OrderItemRepository: Popular Product IDs
-    OrderItemRepository-->>ProductService: Product Statistics
+    ProductService->>ProductStatisticsRepository: findTop5ByPeriod(3days)
+    ProductStatisticsRepository->>DB: SELECT ps.*, p.*<br/>FROM PRODUCT_STATISTICS ps<br/>JOIN PRODECT p ON ps.product_id = p.id<br/>WHERE ps.period_start >= NOW() - INTERVAL 3 DAY<br/>AND ps.period_end <= NOW()<br/>ORDER BY ps.sales_count DESC LIMIT 5
+    DB-->>ProductStatisticsRepository: Product Statistics
+    ProductStatisticsRepository-->>ProductService: List<ProductStatistics>
 
-    ProductService->>ProductRepository: findByIdIn(productIds)
-    ProductRepository->>DB: SELECT * FROM PRODECT WHERE id IN (...)
-    DB-->>ProductRepository: Product List
-    ProductRepository-->>ProductService: Products
-
-    ProductService->>ProductService: enrichWithSalesCount()
+    ProductService->>ProductService: enrichWithRanking()
     ProductService-->>ProductController: PopularProductsDto
     ProductController-->>Client: 200 OK (인기 상품 Top 5)
+
+    Note over ProductStatisticsRepository,DB: PRODUCT_STATISTICS 테이블은<br/>스케줄러에 의해 주기적으로 갱신됨
 ```
 
 ---
@@ -476,7 +473,7 @@ sequenceDiagram
         UserRepository-->>PointService: Updated
 
         PointService->>PointHistoryRepository: save(pointHistory)
-        PointHistoryRepository->>DB: INSERT INTO POINT_HISTORY<br/>(user_id, amount, Transaction_type='EARN')
+        PointHistoryRepository->>DB: INSERT INTO POINT_HISTORY<br/>(user_id, amount, Transaction_type='EARN', description='포인트 충전')
         DB-->>PointHistoryRepository: Success
         PointHistoryRepository-->>PointService: PointHistory
 
@@ -825,8 +822,8 @@ sequenceDiagram
         alt 취소 가능
             Note over OrderService: 트랜잭션 시작
 
-            OrderService->>OrderRepository: updateStatus(orderId, 'CANCELLED')
-            OrderRepository->>DB: UPDATE ORDERS SET status = 'CANCELLED' WHERE id = ?
+            OrderService->>OrderRepository: updateStatus(orderId, 'CANCELLED', reason)
+            OrderRepository->>DB: UPDATE ORDERS<br/>SET status = 'CANCELLED', cancel_reason = ?<br/>WHERE id = ?
             DB-->>OrderRepository: Success
 
             OrderService->>ProductRepository: restoreStock(orderItems)
@@ -835,7 +832,7 @@ sequenceDiagram
 
             OrderService->>PointService: refundPoint(userId, order.finalAmount)
             PointService->>DB: UPDATE USERS SET point = point + ?
-            PointService->>DB: INSERT INTO POINT_HISTORY (type='REFUND')
+            PointService->>DB: INSERT INTO POINT_HISTORY<br/>(type='REFUND', description='주문 취소 환불')
             DB-->>PointService: Success
 
             alt 쿠폰 사용했던 경우
@@ -896,12 +893,12 @@ sequenceDiagram
 
             alt 포인트 충분
                 PointService->>DB: UPDATE USERS SET point = point - ?
-                PointService->>DB: INSERT INTO POINT_HISTORY (type='USE')
+                PointService->>DB: INSERT INTO POINT_HISTORY<br/>(type='USE', description='주문 결제')
                 DB-->>PointService: Success
                 PointService-->>PaymentService: Deducted
 
                 PaymentService->>PaymentRepository: save(payment)
-                PaymentRepository->>DB: INSERT INTO PAYMENTS
+                PaymentRepository->>DB: INSERT INTO PAYMENTS<br/>(payment_method='POINT', status='SUCCESS',<br/>earned_point=finalAmount*0.01)
                 DB-->>PaymentRepository: Payment
                 PaymentRepository-->>PaymentService: Payment
 
@@ -911,7 +908,7 @@ sequenceDiagram
 
                 PaymentService->>PointService: earnPoint(userId, finalAmount * 0.01)
                 PointService->>DB: UPDATE USERS SET point = point + ?
-                PointService->>DB: INSERT INTO POINT_HISTORY (type='EARN')
+                PointService->>DB: INSERT INTO POINT_HISTORY<br/>(type='EARN', description='결제 적립')
                 DB-->>PointService: Success
 
                 Note over PaymentService: 트랜잭션 커밋
@@ -1049,7 +1046,14 @@ sequenceDiagram
 ---
 
 **작성일:** 2024-10-30
-**버전:** 2.0
+**최종 수정일:** 2025-11-03
+**버전:** 2.1
+
 **변경 이력:**
+- v2.1 (2025-11-03): data-models.md v1.2 기준 업데이트
+  - 인기 상품 조회에 PRODUCT_STATISTICS 테이블 사용으로 변경
+  - POINT_HISTORY에 description 필드 추가
+  - PAYMENTS에 payment_method, status, earned_point 필드 추가
+  - ORDERS에 cancel_reason 필드 추가
 - v2.0 (2024-10-30): API 명세서 기반 전체 시퀀스 다이어그램 재작성
 - v1.0 (2024-10-30): 초기 작성
