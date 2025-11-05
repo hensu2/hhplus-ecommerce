@@ -40,3 +40,12 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// Main Class 설정
+bootJar {
+    mainClass = 'com.hhplus.ecommerce.HhplusApplication'
+}
+
+bootRun {
+    mainClass = 'com.hhplus.ecommerce.HhplusApplication'
+}

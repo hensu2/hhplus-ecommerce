@@ -1,6 +1,6 @@
 spring:
   application:
-    name: demo
+    name: hhplus-ecommerce
 
 server:
   port: 8080
@@ -21,4 +21,4 @@ springdoc:
 logging:
   level:
     root: INFO
-    com.example: DEBUG
+    com.hhplus: DEBUG
