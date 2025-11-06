@@ -1,6 +1,7 @@
 package com.hhplus.ecommerce.infrastructure.productOption.memory;
 
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
+import com.hhplus.ecommerce.domain.productOption.StockUpdateType;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
@@ -41,5 +42,28 @@ public class ProductOptionTable {
     public ProductOptionEntity save(ProductOptionEntity productOption) {
         table.put(productOption.id(), productOption);
         return productOption;
+    }
+
+    /**
+     * 재고를 원자적으로 차감합니다.
+     * ConcurrentHashMap의 compute 메서드를 사용하여 동시성을 제어합니다.
+     * @param optionId 옵션 ID
+     * @param quantity 차감할 수량
+     * @return 업데이트된 ProductOptionEntity
+     * @throws IllegalStateException 재고가 부족하거나 옵션이 존재하지 않을 때
+     */
+    public ProductOptionEntity decreaseStock(Long optionId, long quantity) {
+        ProductOptionEntity result = table.compute(optionId, (id, existing) -> {
+            if (existing == null) {
+                throw new IllegalStateException("상품 옵션을 찾을 수 없습니다.");
+            }
+            return existing.updateStock(StockUpdateType.DECREASE, (int) quantity);
+        });
+
+        if (result == null) {
+            throw new IllegalStateException("재고 차감에 실패했습니다.");
+        }
+
+        return result;
     }
 }

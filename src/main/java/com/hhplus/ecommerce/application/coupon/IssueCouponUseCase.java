@@ -27,9 +27,8 @@ public class IssueCouponUseCase {
                 throw new IllegalStateException("이미 발급받은 쿠폰입니다.");
             });
 
-        // 3. 재고 차감 (동시성 제어 포함)
-        CouponEntity updatedCoupon = coupon.decreaseStock();
-        couponRepository.save(updatedCoupon);
+        // 3. 재고 차감 (원자적 연산으로 동시성 제어)
+        CouponEntity updatedCoupon = couponRepository.decreaseStock(couponId);
 
         // 4. 발급 히스토리 저장
         long now = System.currentTimeMillis();

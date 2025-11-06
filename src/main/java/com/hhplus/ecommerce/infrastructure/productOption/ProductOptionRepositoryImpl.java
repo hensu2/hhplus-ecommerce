@@ -30,4 +30,9 @@ public class ProductOptionRepositoryImpl implements ProductOptionRepository {
     public ProductOptionEntity save(ProductOptionEntity productOption) {
         return productOptionTable.save(productOption);
     }
+
+    @Override
+    public ProductOptionEntity decreaseStock(Long optionId, long quantity) {
+        return productOptionTable.decreaseStock(optionId, quantity);
+    }
 }

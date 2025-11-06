@@ -34,14 +34,14 @@ class IncreaseProductViewUseCaseTest {
         ProductStatisticsEntity existingStats = new ProductStatisticsEntity(productId, 10, 5, System.currentTimeMillis());
         ProductStatisticsEntity updatedStats = existingStats.increaseViewCount();
 
-        when(productStatisticsTable.getOrCreateDefault(productId)).thenReturn(existingStats);
+        when(productStatisticsTable.incrementViewCount(productId)).thenReturn(updatedStats);
         when(productStatisticsRepository.save(any())).thenReturn(updatedStats);
 
         // when
         increaseProductViewUseCase.execute(productId);
 
         // then
-        verify(productStatisticsTable).getOrCreateDefault(productId);
+        verify(productStatisticsTable).incrementViewCount(productId);
         verify(productStatisticsRepository).save(any(ProductStatisticsEntity.class));
     }
 
@@ -50,17 +50,16 @@ class IncreaseProductViewUseCaseTest {
     void shouldCreateNewStatisticsWhenNotExist() {
         // given
         long productId = 1L;
-        ProductStatisticsEntity newStats = new ProductStatisticsEntity(productId, 0, 0, System.currentTimeMillis());
-        ProductStatisticsEntity updatedStats = newStats.increaseViewCount();
+        ProductStatisticsEntity newStats = new ProductStatisticsEntity(productId, 1, 0, System.currentTimeMillis());
 
-        when(productStatisticsTable.getOrCreateDefault(productId)).thenReturn(newStats);
-        when(productStatisticsRepository.save(any())).thenReturn(updatedStats);
+        when(productStatisticsTable.incrementViewCount(productId)).thenReturn(newStats);
+        when(productStatisticsRepository.save(any())).thenReturn(newStats);
 
         // when
         increaseProductViewUseCase.execute(productId);
 
         // then
-        verify(productStatisticsTable).getOrCreateDefault(productId);
+        verify(productStatisticsTable).incrementViewCount(productId);
         verify(productStatisticsRepository).save(any(ProductStatisticsEntity.class));
     }
 
@@ -69,10 +68,9 @@ class IncreaseProductViewUseCaseTest {
     void shouldSaveAfterIncreasingViewCount() {
         // given
         long productId = 1L;
-        ProductStatisticsEntity stats = new ProductStatisticsEntity(productId, 5, 3, System.currentTimeMillis());
-        ProductStatisticsEntity updatedStats = stats.increaseViewCount();
+        ProductStatisticsEntity updatedStats = new ProductStatisticsEntity(productId, 6, 3, System.currentTimeMillis());
 
-        when(productStatisticsTable.getOrCreateDefault(productId)).thenReturn(stats);
+        when(productStatisticsTable.incrementViewCount(productId)).thenReturn(updatedStats);
         when(productStatisticsRepository.save(any())).thenReturn(updatedStats);
 
         // when

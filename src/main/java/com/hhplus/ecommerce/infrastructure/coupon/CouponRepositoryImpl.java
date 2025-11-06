@@ -49,4 +49,9 @@ public class CouponRepositoryImpl implements CouponRepository {
     public List<CouponHistoryEntity> findHistoriesByUserId(long userId) {
         return couponHistoryTable.findByUserId(userId);
     }
+
+    @Override
+    public CouponEntity decreaseStock(long couponId) {
+        return couponTable.decreaseStock(couponId);
+    }
 }

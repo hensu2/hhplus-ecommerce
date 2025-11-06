@@ -66,12 +66,11 @@ class GetProductUseCaseTest {
     void execute_ValidProductId_ReturnsProductDetail() {
         // given
         Long productId = 1L;
-        ProductStatisticsEntity stats = new ProductStatisticsEntity(productId, 10, 5, System.currentTimeMillis());
-        ProductStatisticsEntity updatedStats = stats.increaseViewCount();
+        ProductStatisticsEntity updatedStats = new ProductStatisticsEntity(productId, 11, 5, System.currentTimeMillis());
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
         when(productOptionRepository.findByProductId(productId)).thenReturn(testOptions);
-        when(productStatisticsTable.getOrCreateDefault(productId)).thenReturn(stats);
+        when(productStatisticsTable.incrementViewCount(productId)).thenReturn(updatedStats);
         when(productStatisticsRepository.save(any())).thenReturn(updatedStats);
 
         // when
@@ -97,12 +96,11 @@ class GetProductUseCaseTest {
     void execute_ProductWithNoOptions_ReturnsProductDetailWithEmptyOptions() {
         // given
         Long productId = 1L;
-        ProductStatisticsEntity stats = new ProductStatisticsEntity(productId, 10, 5, System.currentTimeMillis());
-        ProductStatisticsEntity updatedStats = stats.increaseViewCount();
+        ProductStatisticsEntity updatedStats = new ProductStatisticsEntity(productId, 11, 5, System.currentTimeMillis());
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
         when(productOptionRepository.findByProductId(productId)).thenReturn(List.of());
-        when(productStatisticsTable.getOrCreateDefault(productId)).thenReturn(stats);
+        when(productStatisticsTable.incrementViewCount(productId)).thenReturn(updatedStats);
         when(productStatisticsRepository.save(any())).thenReturn(updatedStats);
 
         // when

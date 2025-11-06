@@ -60,10 +60,11 @@ class IssueCouponUseCaseTest {
     @DisplayName("쿠폰 발급에 성공한다")
     void issueCoupon() {
         // given
+        CouponEntity decreasedCoupon = testCoupon.decreaseStock();
+
         when(couponRepository.findById(couponId)).thenReturn(Optional.of(testCoupon));
         when(couponRepository.findHistoryByUserIdAndCouponId(userId, couponId)).thenReturn(Optional.empty());
-        when(couponRepository.save(any(CouponEntity.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(couponRepository.decreaseStock(couponId)).thenReturn(decreasedCoupon);
 
         long now = System.currentTimeMillis();
         CouponHistoryEntity savedHistory = new CouponHistoryEntity(
@@ -146,6 +147,7 @@ class IssueCouponUseCaseTest {
 
         when(couponRepository.findById(couponId)).thenReturn(Optional.of(outOfStockCoupon));
         when(couponRepository.findHistoryByUserIdAndCouponId(userId, couponId)).thenReturn(Optional.empty());
+        when(couponRepository.decreaseStock(couponId)).thenThrow(new IllegalStateException("쿠폰 재고가 부족합니다."));
 
         // when & then
         assertThatThrownBy(() -> issueCouponUseCase.execute(userId, couponId))
@@ -157,11 +159,11 @@ class IssueCouponUseCaseTest {
     @DisplayName("쿠폰 발급 시 재고가 1 감소한다")
     void issueCouponDecreasesStock() {
         // given
-        int initialStock = testCoupon.stock();
+        CouponEntity decreasedCoupon = testCoupon.decreaseStock();
+
         when(couponRepository.findById(couponId)).thenReturn(Optional.of(testCoupon));
         when(couponRepository.findHistoryByUserIdAndCouponId(userId, couponId)).thenReturn(Optional.empty());
-        when(couponRepository.save(any(CouponEntity.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(couponRepository.decreaseStock(couponId)).thenReturn(decreasedCoupon);
 
         long now = System.currentTimeMillis();
         CouponHistoryEntity savedHistory = new CouponHistoryEntity(
@@ -179,7 +181,7 @@ class IssueCouponUseCaseTest {
 
         // then
         assertThat(response).isNotNull();
-        verify(couponRepository).save(any(CouponEntity.class));
+        verify(couponRepository).decreaseStock(couponId);
     }
 
     @Test
@@ -187,11 +189,12 @@ class IssueCouponUseCaseTest {
     void issueCouponToDifferentUser() {
         // given
         long anotherUserId = 2L;
+        CouponEntity decreasedCoupon = testCoupon.decreaseStock();
+
         when(couponRepository.findById(couponId)).thenReturn(Optional.of(testCoupon));
         when(couponRepository.findHistoryByUserIdAndCouponId(anotherUserId, couponId))
             .thenReturn(Optional.empty());
-        when(couponRepository.save(any(CouponEntity.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(couponRepository.decreaseStock(couponId)).thenReturn(decreasedCoupon);
 
         long now = System.currentTimeMillis();
         CouponHistoryEntity savedHistory = new CouponHistoryEntity(

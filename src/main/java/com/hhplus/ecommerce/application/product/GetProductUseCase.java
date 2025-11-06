@@ -39,9 +39,8 @@ public class GetProductUseCase {
         ProductEntity product = productRepository.findById(productId)
             .orElseThrow(() -> new ProductNotFoundException("상품을 찾을 수 없습니다."));
 
-        // 조회수 증가
-        ProductStatisticsEntity statistics = productStatisticsTable.getOrCreateDefault(productId);
-        ProductStatisticsEntity updated = statistics.increaseViewCount();
+        // 조회수 증가 (원자적 연산)
+        ProductStatisticsEntity updated = productStatisticsTable.incrementViewCount(productId);
         productStatisticsRepository.save(updated);
 
         List<ProductOptionEntity> options = productOptionRepository.findByProductId(productId);

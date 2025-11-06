@@ -40,9 +40,11 @@ public class CreateOrderUseCase {
             ProductOptionEntity option = productOptionRepository.findById(item.getProductOptionId())
                 .orElseThrow(() -> new IllegalArgumentException("상품 옵션을 찾을 수 없습니다."));
 
-            // 재고 차감
-            ProductOptionEntity updatedOption = option.updateStock(StockUpdateType.DECREASE, item.getQuantity());
-            productOptionRepository.save(updatedOption);
+            // 재고 차감 (원자적 연산으로 동시성 제어)
+            ProductOptionEntity updatedOption = productOptionRepository.decreaseStock(
+                item.getProductOptionId(),
+                item.getQuantity()
+            );
 
             int itemPrice = (int) (option.additionalPrice() * item.getQuantity());
             totalAmount += itemPrice;

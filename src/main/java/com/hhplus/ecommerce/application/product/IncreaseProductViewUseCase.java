@@ -18,9 +18,8 @@ public class IncreaseProductViewUseCase {
     }
 
     public void execute(long productId) {
-        // 통계가 없으면 생성하고, 있으면 조회수 증가
-        ProductStatisticsEntity statistics = productStatisticsTable.getOrCreateDefault(productId);
-        ProductStatisticsEntity updated = statistics.increaseViewCount();
+        // 조회수를 원자적으로 증가
+        ProductStatisticsEntity updated = productStatisticsTable.incrementViewCount(productId);
         productStatisticsRepository.save(updated);
     }
 }

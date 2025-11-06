@@ -83,10 +83,13 @@ class CreateOrderUseCaseTest {
             null
         );
 
+        ProductOptionEntity decreasedOption1 = testOption1.updateStock(StockUpdateType.DECREASE, 2);
+        ProductOptionEntity decreasedOption2 = testOption2.updateStock(StockUpdateType.DECREASE, 1);
+
         when(productOptionRepository.findById(1L)).thenReturn(Optional.of(testOption1));
         when(productOptionRepository.findById(2L)).thenReturn(Optional.of(testOption2));
-        when(productOptionRepository.save(any(ProductOptionEntity.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(productOptionRepository.decreaseStock(1L, 2)).thenReturn(decreasedOption1);
+        when(productOptionRepository.decreaseStock(2L, 1)).thenReturn(decreasedOption2);
 
         long now = System.currentTimeMillis();
         OrderEntity savedOrder = new OrderEntity(
@@ -152,6 +155,8 @@ class CreateOrderUseCaseTest {
         );
 
         when(productOptionRepository.findById(1L)).thenReturn(Optional.of(testOption1));
+        when(productOptionRepository.decreaseStock(1L, 200))
+            .thenThrow(new com.hhplus.ecommerce.common.exception.InvalidStockUpdateException("재고가 부족합니다. 현재 재고: 100"));
 
         // when & then
         assertThatThrownBy(() -> createOrderUseCase.execute(request))
@@ -169,9 +174,10 @@ class CreateOrderUseCaseTest {
             null
         );
 
+        ProductOptionEntity decreasedOption = testOption1.updateStock(StockUpdateType.DECREASE, 2);
+
         when(productOptionRepository.findById(1L)).thenReturn(Optional.of(testOption1));
-        when(productOptionRepository.save(any(ProductOptionEntity.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(productOptionRepository.decreaseStock(1L, 2)).thenReturn(decreasedOption);
 
         long now = System.currentTimeMillis();
         OrderEntity savedOrder = new OrderEntity(
@@ -193,7 +199,7 @@ class CreateOrderUseCaseTest {
         createOrderUseCase.execute(request);
 
         // then
-        verify(productOptionRepository).save(any(ProductOptionEntity.class));
+        verify(productOptionRepository).decreaseStock(1L, 2);
     }
 
     @Test
@@ -208,10 +214,13 @@ class CreateOrderUseCaseTest {
             null
         );
 
+        ProductOptionEntity decreasedOption1 = testOption1.updateStock(StockUpdateType.DECREASE, 1);
+        ProductOptionEntity decreasedOption2 = testOption2.updateStock(StockUpdateType.DECREASE, 2);
+
         when(productOptionRepository.findById(1L)).thenReturn(Optional.of(testOption1));
         when(productOptionRepository.findById(2L)).thenReturn(Optional.of(testOption2));
-        when(productOptionRepository.save(any(ProductOptionEntity.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
+        when(productOptionRepository.decreaseStock(1L, 1)).thenReturn(decreasedOption1);
+        when(productOptionRepository.decreaseStock(2L, 2)).thenReturn(decreasedOption2);
 
         long now = System.currentTimeMillis();
         OrderEntity savedOrder = new OrderEntity(
@@ -234,7 +243,8 @@ class CreateOrderUseCaseTest {
 
         // then
         assertThat(response.getItems()).hasSize(2);
-        verify(productOptionRepository, times(2)).save(any(ProductOptionEntity.class));
+        verify(productOptionRepository).decreaseStock(1L, 1);
+        verify(productOptionRepository).decreaseStock(2L, 2);
         verify(orderRepository, times(2)).saveItem(any(OrderItemEntity.class));
     }
 }

@@ -66,4 +66,26 @@ public class CouponTable {
         table.put(coupon.id(), coupon);
         return coupon;
     }
+
+    /**
+     * 쿠폰 재고를 원자적으로 차감합니다.
+     * ConcurrentHashMap의 compute 메서드를 사용하여 동시성을 제어합니다.
+     * @param couponId 쿠폰 ID
+     * @return 업데이트된 CouponEntity
+     * @throws IllegalStateException 재고가 부족하거나 쿠폰이 존재하지 않을 때
+     */
+    public CouponEntity decreaseStock(long couponId) {
+        CouponEntity result = table.compute(couponId, (id, existing) -> {
+            if (existing == null) {
+                throw new IllegalStateException("쿠폰을 찾을 수 없습니다.");
+            }
+            return existing.decreaseStock();
+        });
+
+        if (result == null) {
+            throw new IllegalStateException("쿠폰 재고 차감에 실패했습니다.");
+        }
+
+        return result;
+    }
 }
