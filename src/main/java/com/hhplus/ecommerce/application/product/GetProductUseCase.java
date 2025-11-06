@@ -2,9 +2,12 @@ package com.hhplus.ecommerce.application.product;
 
 import com.hhplus.ecommerce.common.exception.ProductNotFoundException;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
+import com.hhplus.ecommerce.domain.product.ProductStatisticsEntity;
 import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
 import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
+import com.hhplus.ecommerce.infrastructure.product.ProductStatisticsRepository;
+import com.hhplus.ecommerce.infrastructure.product.memory.ProductStatisticsTable;
 import com.hhplus.ecommerce.presentation.product.res.ProductDetailResponse;
 import com.hhplus.ecommerce.presentation.product.res.ProductOptionResponse;
 import org.springframework.stereotype.Service;
@@ -17,10 +20,17 @@ public class GetProductUseCase {
 
     private final ProductRepository productRepository;
     private final ProductOptionRepository productOptionRepository;
+    private final ProductStatisticsRepository productStatisticsRepository;
+    private final ProductStatisticsTable productStatisticsTable;
 
-    public GetProductUseCase(ProductRepository productRepository, ProductOptionRepository productOptionRepository) {
+    public GetProductUseCase(ProductRepository productRepository,
+                            ProductOptionRepository productOptionRepository,
+                            ProductStatisticsRepository productStatisticsRepository,
+                            ProductStatisticsTable productStatisticsTable) {
         this.productRepository = productRepository;
         this.productOptionRepository = productOptionRepository;
+        this.productStatisticsRepository = productStatisticsRepository;
+        this.productStatisticsTable = productStatisticsTable;
     }
 
     public ProductDetailResponse execute(Long productId) {
@@ -28,6 +38,11 @@ public class GetProductUseCase {
 
         ProductEntity product = productRepository.findById(productId)
             .orElseThrow(() -> new ProductNotFoundException("상품을 찾을 수 없습니다."));
+
+        // 조회수 증가
+        ProductStatisticsEntity statistics = productStatisticsTable.getOrCreateDefault(productId);
+        ProductStatisticsEntity updated = statistics.increaseViewCount();
+        productStatisticsRepository.save(updated);
 
         List<ProductOptionEntity> options = productOptionRepository.findByProductId(productId);
 

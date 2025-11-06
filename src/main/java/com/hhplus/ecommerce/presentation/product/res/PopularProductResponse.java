@@ -8,9 +8,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PopularProductResponse {
-    private Long id;
+    private Long productId;
     private String productName;
     private Integer price;
-    private Integer salesCount;
-    private Integer ranking;
+    private Long viewCount;
+    private Long salesCount;
+    private Long popularityScore;
 }

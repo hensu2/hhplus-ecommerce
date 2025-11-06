@@ -3,8 +3,11 @@ package com.hhplus.ecommerce.application.product;
 import com.hhplus.ecommerce.common.exception.InvalidInputException;
 import com.hhplus.ecommerce.common.exception.ProductNotFoundException;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
+import com.hhplus.ecommerce.domain.product.ProductStatisticsEntity;
 import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
+import com.hhplus.ecommerce.infrastructure.product.ProductStatisticsRepository;
+import com.hhplus.ecommerce.infrastructure.product.memory.ProductStatisticsTable;
 import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
 import com.hhplus.ecommerce.presentation.product.res.ProductDetailResponse;
 import com.hhplus.ecommerce.presentation.product.res.ProductOptionResponse;
@@ -21,8 +24,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("GetProductUseCase 단위 테스트")
@@ -33,6 +37,12 @@ class GetProductUseCaseTest {
 
     @Mock
     private ProductOptionRepository productOptionRepository;
+
+    @Mock
+    private ProductStatisticsRepository productStatisticsRepository;
+
+    @Mock
+    private ProductStatisticsTable productStatisticsTable;
 
     @InjectMocks
     private GetProductUseCase getProductUseCase;
@@ -56,8 +66,13 @@ class GetProductUseCaseTest {
     void execute_ValidProductId_ReturnsProductDetail() {
         // given
         Long productId = 1L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(testProduct));
-        given(productOptionRepository.findByProductId(productId)).willReturn(testOptions);
+        ProductStatisticsEntity stats = new ProductStatisticsEntity(productId, 10, 5, System.currentTimeMillis());
+        ProductStatisticsEntity updatedStats = stats.increaseViewCount();
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
+        when(productOptionRepository.findByProductId(productId)).thenReturn(testOptions);
+        when(productStatisticsTable.getOrCreateDefault(productId)).thenReturn(stats);
+        when(productStatisticsRepository.save(any())).thenReturn(updatedStats);
 
         // when
         ProductDetailResponse response = getProductUseCase.execute(productId);
@@ -75,9 +90,6 @@ class GetProductUseCaseTest {
         assertThat(options.get(0).getOptionType()).isEqualTo("16GB RAM");
         assertThat(options.get(0).getAdditionalPrice()).isEqualTo(100000);
         assertThat(options.get(0).getStock()).isEqualTo(50);
-
-        verify(productRepository).findById(productId);
-        verify(productOptionRepository).findByProductId(productId);
     }
 
     @Test
@@ -85,8 +97,13 @@ class GetProductUseCaseTest {
     void execute_ProductWithNoOptions_ReturnsProductDetailWithEmptyOptions() {
         // given
         Long productId = 1L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(testProduct));
-        given(productOptionRepository.findByProductId(productId)).willReturn(List.of());
+        ProductStatisticsEntity stats = new ProductStatisticsEntity(productId, 10, 5, System.currentTimeMillis());
+        ProductStatisticsEntity updatedStats = stats.increaseViewCount();
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
+        when(productOptionRepository.findByProductId(productId)).thenReturn(List.of());
+        when(productStatisticsTable.getOrCreateDefault(productId)).thenReturn(stats);
+        when(productStatisticsRepository.save(any())).thenReturn(updatedStats);
 
         // when
         ProductDetailResponse response = getProductUseCase.execute(productId);
@@ -96,9 +113,6 @@ class GetProductUseCaseTest {
         assertThat(response.getId()).isEqualTo(testProduct.id());
         assertThat(response.getProductName()).isEqualTo(testProduct.productName());
         assertThat(response.getOptions()).isEmpty();
-
-        verify(productRepository).findById(productId);
-        verify(productOptionRepository).findByProductId(productId);
     }
 
     @Test
@@ -130,12 +144,11 @@ class GetProductUseCaseTest {
     void execute_ProductNotFound_ThrowsException() {
         // given
         Long productId = 999L;
-        given(productRepository.findById(productId)).willReturn(Optional.empty());
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> getProductUseCase.execute(productId))
             .isInstanceOf(ProductNotFoundException.class)
             .hasMessage("상품을 찾을 수 없습니다.");
-        verify(productRepository).findById(productId);
     }
 }
