@@ -1,5 +1,6 @@
 package com.hhplus.ecommerce.presentation.coupon;
 
+import com.hhplus.ecommerce.application.coupon.GetCouponsUseCase;
 import com.hhplus.ecommerce.presentation.coupon.req.ValidateCouponRequest;
 import com.hhplus.ecommerce.presentation.coupon.res.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +19,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/coupons")
 public class CouponController {
 
+    private final GetCouponsUseCase getCouponsUseCase;
+
     private static final AtomicLong COUPON_HISTORY_ID_GENERATOR = new AtomicLong(2);
     private static final Map<Long, CouponResponse> MY_COUPONS = new LinkedHashMap<>();
     private static final Map<Long, Integer> COUPON_STOCK = new HashMap<>();
@@ -33,6 +36,18 @@ public class CouponController {
             "2024-10-30T00:00:00", "2024-11-30T23:59:59", "ISSUED",
             "2024-10-30T00:00:00", null
         ));
+    }
+
+    public CouponController(GetCouponsUseCase getCouponsUseCase) {
+        this.getCouponsUseCase = getCouponsUseCase;
+    }
+
+    // 쿠폰 목록 조회 (GET /api/coupons)
+    @Operation(summary = "쿠폰 목록 조회", description = "발급 가능한 쿠폰 목록을 조회합니다.")
+    @GetMapping
+    public ResponseEntity<List<CouponListResponse>> getCoupons() {
+        List<CouponListResponse> response = getCouponsUseCase.execute();
+        return ResponseEntity.ok(response);
     }
 
     // 쿠폰 발급 (POST /api/coupons/{couponId}/issue)
