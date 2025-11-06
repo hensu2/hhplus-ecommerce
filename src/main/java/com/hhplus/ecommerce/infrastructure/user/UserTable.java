@@ -23,4 +23,16 @@ public class UserTable {
     public Optional<User> findById(Long id) {
         return Optional.ofNullable(table.get(id));
     }
+
+    public List<User> findAll() {
+        return List.copyOf(table.values());
+    }
+
+    public User save(User user) {
+        long id = ++cursor;
+        long timestamp = System.currentTimeMillis();
+        User newUser = new User(id, user.username(), user.point(), user.role(), timestamp, timestamp);
+        table.put(id, newUser);
+        return newUser;
+    }
 }

@@ -18,19 +18,134 @@ http://localhost:8080/api-docs
 ---
 
 ## 목차
-1. [상품 관리 API](#1-상품-관리-api)
-2. [장바구니 API](#2-장바구니-api)
-3. [포인트 API](#3-포인트-api)
-4. [쿠폰 API](#4-쿠폰-api)
-5. [주문 API](#5-주문-api)
-6. [결제 API](#6-결제-api)
-7. [공통 응답 형식](#공통-응답-형식)
+1. [사용자 관리 API](#1-사용자-관리-api)
+2. [상품 관리 API](#2-상품-관리-api)
+3. [장바구니 API](#3-장바구니-api)
+4. [포인트 API](#4-포인트-api)
+5. [쿠폰 API](#5-쿠폰-api)
+6. [주문 API](#6-주문-api)
+7. [결제 API](#7-결제-api)
+8. [공통 응답 형식](#공통-응답-형식)
 
 ---
 
-## 1. 상품 관리 API
+## 1. 사용자 관리 API
 
-### 1-1. 상품 목록 조회
+### 1-1. 사용자 조회
+특정 사용자의 정보를 조회합니다.
+
+**Endpoint:** `GET /api/users/{id}`
+
+**Path Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| id | Long | Yes | 사용자 ID |
+
+**Response (200 OK):**
+```json
+{
+  "id": 1,
+  "username": "user123",
+  "point": 50000,
+  "role": "USER",
+  "createdAt": 1730246400000,
+  "updatedAt": 1730246400000
+}
+```
+
+**Error Response (404 Not Found):**
+```json
+{
+  "error": "NOT_FOUND",
+  "message": "사용자를 찾을 수 없습니다."
+}
+```
+
+**Error Response (400 Bad Request):**
+```json
+{
+  "error": "INVALID_ARGUMENT",
+  "message": "User ID must be greater than 0"
+}
+```
+
+---
+
+### 1-2. 사용자 목록 조회
+전체 사용자 목록을 조회합니다.
+
+**Endpoint:** `GET /api/users`
+
+**Response (200 OK):**
+```json
+[
+  {
+    "id": 1,
+    "username": "user123",
+    "point": 50000,
+    "role": "USER",
+    "createdAt": 1730246400000,
+    "updatedAt": 1730246400000
+  },
+  {
+    "id": 2,
+    "username": "admin",
+    "point": 100000,
+    "role": "ADMIN",
+    "createdAt": 1730246400000,
+    "updatedAt": 1730246400000
+  }
+]
+```
+
+---
+
+### 1-3. 사용자 생성
+새로운 사용자를 생성합니다.
+
+**Endpoint:** `POST /api/users`
+
+**Request Body:**
+```json
+{
+  "username": "newuser",
+  "point": 10000,
+  "role": "USER"
+}
+```
+
+**Request Body Parameters:**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| username | String | Yes | 사용자 이름 |
+| point | Long | Yes | 초기 포인트 (0 이상) |
+| role | String | Yes | 사용자 역할 (USER, ADMIN) |
+
+**Response (200 OK):**
+```json
+{
+  "id": 4,
+  "username": "newuser",
+  "point": 10000,
+  "role": "USER",
+  "createdAt": 1730246400000,
+  "updatedAt": 1730246400000
+}
+```
+
+**Error Response (400 Bad Request):**
+```json
+{
+  "error": "INVALID_ARGUMENT",
+  "message": "사용자 이름은 필수입니다."
+}
+```
+
+---
+
+## 2. 상품 관리 API
+
+### 2-1. 상품 목록 조회
 상품 목록을 페이징하여 조회합니다.
 
 **Endpoint:** `GET /api/products`
@@ -62,7 +177,7 @@ http://localhost:8080/api-docs
 
 ---
 
-### 1-2. 상품 상세 조회
+### 2-2. 상품 상세 조회
 특정 상품의 상세 정보와 옵션, 재고를 조회합니다.
 
 **Endpoint:** `GET /api/products/{id}`
@@ -107,7 +222,7 @@ http://localhost:8080/api-docs
 
 ---
 
-### 1-3. 인기 상품 조회
+### 2-3. 인기 상품 조회
 최근 3일간 판매량 기준 Top 5 상품을 조회합니다.
 
 **Endpoint:** `GET /api/products/popular`
@@ -138,9 +253,9 @@ http://localhost:8080/api-docs
 
 ---
 
-## 2. 장바구니 API
+## 3. 장바구니 API
 
-### 2-1. 장바구니 조회
+### 3-1. 장바구니 조회
 현재 사용자의 장바구니 목록을 조회합니다.
 
 **Endpoint:** `GET /api/cart`
@@ -172,7 +287,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 2-2. 장바구니 추가
+### 3-2. 장바구니 추가
 상품을 장바구니에 추가합니다. 재고를 확인합니다.
 
 **Endpoint:** `POST /api/cart`
@@ -217,7 +332,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 2-3. 장바구니 수량 변경
+### 3-3. 장바구니 수량 변경
 장바구니 아이템의 수량을 변경합니다.
 
 **Endpoint:** `PUT /api/cart/{id}`
@@ -252,7 +367,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 2-4. 장바구니 삭제
+### 3-4. 장바구니 삭제
 장바구니에서 특정 아이템을 삭제합니다.
 
 **Endpoint:** `DELETE /api/cart/{id}`
@@ -274,9 +389,9 @@ Authorization: Bearer {token}
 
 ---
 
-## 3. 포인트 API
+## 4. 포인트 API
 
-### 3-1. 포인트 조회
+### 4-1. 포인트 조회
 현재 사용자의 포인트 잔액을 조회합니다.
 
 **Endpoint:** `GET /api/users/me/point`
@@ -298,7 +413,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 3-2. 포인트 충전
+### 4-2. 포인트 충전
 사용자의 포인트를 충전합니다.
 
 **Endpoint:** `POST /api/users/me/point/charge`
@@ -336,7 +451,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 3-3. 포인트 사용 이력 조회
+### 4-3. 포인트 사용 이력 조회
 포인트 충전/사용 이력을 조회합니다.
 
 **Endpoint:** `GET /api/users/me/point/history`
@@ -379,9 +494,9 @@ Authorization: Bearer {token}
 
 ---
 
-## 4. 쿠폰 API
+## 5. 쿠폰 API
 
-### 4-1. 쿠폰 발급 (선착순)
+### 5-1. 쿠폰 발급 (선착순)
 선착순 쿠폰을 발급받습니다. 한정 수량이며, 동시성 제어가 적용됩니다.
 
 **Endpoint:** `POST /api/coupons/{couponId}/issue`
@@ -437,7 +552,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 4-2. 내 쿠폰 조회
+### 5-2. 내 쿠폰 조회
 발급받은 쿠폰 목록을 조회합니다.
 
 **Endpoint:** `GET /api/coupons/me`
@@ -490,7 +605,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 4-3. 쿠폰 유효성 검증
+### 5-3. 쿠폰 유효성 검증
 주문 금액에 대해 쿠폰 사용 가능 여부를 확인합니다.
 
 **Endpoint:** `POST /api/coupons/{couponHistoryId}/validate`
@@ -532,9 +647,9 @@ Authorization: Bearer {token}
 
 ---
 
-## 5. 주문 API
+## 6. 주문 API
 
-### 5-1. 주문 생성
+### 6-1. 주문 생성
 장바구니의 상품들로 주문을 생성합니다. 재고 확인 및 차감, 쿠폰 적용, 포인트 차감이 트랜잭션으로 처리됩니다.
 
 **Endpoint:** `POST /api/orders`
@@ -616,7 +731,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 5-2. 주문 목록 조회
+### 6-2. 주문 목록 조회
 사용자의 주문 목록을 조회합니다.
 
 **Endpoint:** `GET /api/orders`
@@ -654,7 +769,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 5-3. 주문 상세 조회
+### 6-3. 주문 상세 조회
 특정 주문의 상세 정보를 조회합니다.
 
 **Endpoint:** `GET /api/orders/{orderId}`
@@ -713,7 +828,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 5-4. 주문 취소
+### 6-4. 주문 취소
 주문을 취소합니다. 재고, 포인트, 쿠폰이 복구됩니다.
 
 **Endpoint:** `POST /api/orders/{orderId}/cancel`
@@ -757,9 +872,9 @@ Authorization: Bearer {token}
 
 ---
 
-## 6. 결제 API
+## 7. 결제 API
 
-### 6-1. 결제 처리
+### 7-1. 결제 처리
 주문에 대한 결제를 처리합니다. 포인트로 결제되며, 성공 시 외부 시스템에 주문 데이터를 비동기로 전송합니다.
 
 **Endpoint:** `POST /api/payments`
@@ -811,7 +926,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 6-2. 결제 조회
+### 7-2. 결제 조회
 특정 주문의 결제 정보를 조회합니다.
 
 **Endpoint:** `GET /api/payments/{orderId}`
@@ -942,10 +1057,15 @@ Authorization: Bearer {token}
 ---
 
 **작성일:** 2024-10-30
-**최종 수정일:** 2025-11-03
-**버전:** 1.1
+**최종 수정일:** 2025-11-06
+**버전:** 1.2
 
 **변경 이력:**
+- v1.2 (2025-11-06): 사용자 관리 API 추가
+  - 사용자 조회 API (GET /api/users/{id})
+  - 사용자 목록 조회 API (GET /api/users)
+  - 사용자 생성 API (POST /api/users)
+  - 기존 섹션 번호 재조정 (상품 관리 1→2, 장바구니 2→3, 포인트 3→4, 쿠폰 4→5, 주문 5→6, 결제 6→7)
 - v1.1 (2025-11-03): data-models.md v1.2 반영 확인
   - 인기 상품 조회 API 명세 유지
   - 포인트, 주문, 결제 관련 필드 정의 확인

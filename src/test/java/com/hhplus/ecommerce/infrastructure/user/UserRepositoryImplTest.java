@@ -8,6 +8,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -61,5 +63,63 @@ class UserRepositoryImplTest {
         // then
         assertThat(result).isEmpty();
         verify(userTable).findById(userId);
+    }
+
+    @Test
+    @DisplayName("전체 사용자 목록을 조회한다")
+    void findAll_ReturnsAllUsers() {
+        // given
+        long timestamp = System.currentTimeMillis();
+        List<User> users = Arrays.asList(
+            new User(1L, "user1", 50000L, "USER", timestamp, timestamp),
+            new User(2L, "user2", 100000L, "ADMIN", timestamp, timestamp),
+            new User(3L, "user3", 30000L, "USER", timestamp, timestamp)
+        );
+        given(userTable.findAll()).willReturn(users);
+
+        // when
+        List<User> result = userRepository.findAll();
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(3);
+        assertThat(result).isEqualTo(users);
+        verify(userTable).findAll();
+    }
+
+    @Test
+    @DisplayName("사용자가 없을 경우 빈 리스트를 반환한다")
+    void findAll_NoUsers_ReturnsEmptyList() {
+        // given
+        given(userTable.findAll()).willReturn(List.of());
+
+        // when
+        List<User> result = userRepository.findAll();
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty();
+        verify(userTable).findAll();
+    }
+
+    @Test
+    @DisplayName("새로운 사용자를 저장한다")
+    void save_NewUser_ReturnsSavedUser() {
+        // given
+        long timestamp = System.currentTimeMillis();
+        User newUser = new User(0L, "newuser", 10000L, "USER", 0L, 0L);
+        User savedUser = new User(4L, "newuser", 10000L, "USER", timestamp, timestamp);
+        given(userTable.save(newUser)).willReturn(savedUser);
+
+        // when
+        User result = userRepository.save(newUser);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.id()).isEqualTo(4L);
+        assertThat(result.username()).isEqualTo("newuser");
+        assertThat(result.point()).isEqualTo(10000L);
+        assertThat(result.role()).isEqualTo("USER");
+        verify(userTable).save(newUser);
     }
 }
