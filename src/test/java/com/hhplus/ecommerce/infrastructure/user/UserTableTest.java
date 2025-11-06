@@ -1,5 +1,6 @@
 package com.hhplus.ecommerce.infrastructure.user;
 
+import com.hhplus.ecommerce.domain.user.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,23 +24,23 @@ class UserTableTest {
     @DisplayName("전체 사용자 목록을 조회한다")
     void findAll_ReturnsAllUsers() {
         // when
-        List<User> users = userTable.findAll();
+        List<UserEntity> users = userTable.findAll();
 
         // then
         assertThat(users).isNotNull();
         assertThat(users).hasSize(3);
-        assertThat(users).extracting(User::id).containsExactlyInAnyOrder(1L, 2L, 3L);
-        assertThat(users).extracting(User::username).containsExactlyInAnyOrder("user123", "admin", "testuser");
+        assertThat(users).extracting(UserEntity::id).containsExactlyInAnyOrder(1L, 2L, 3L);
+        assertThat(users).extracting(UserEntity::username).containsExactlyInAnyOrder("user123", "admin", "testuser");
     }
 
     @Test
     @DisplayName("반환된 리스트는 불변이다")
     void findAll_ReturnsImmutableList() {
         // when
-        List<User> users = userTable.findAll();
+        List<UserEntity> users = userTable.findAll();
 
         // then
-        assertThatThrownBy(() -> users.add(new User(4L, "newuser", 10000L, "USER", 0L, 0L)))
+        assertThatThrownBy(() -> users.add(new UserEntity(4L, "newuser", 10000L, "USER", 0L, 0L)))
             .isInstanceOf(UnsupportedOperationException.class);
     }
 
@@ -50,7 +51,7 @@ class UserTableTest {
         Long userId = 1L;
 
         // when
-        Optional<User> result = userTable.findById(userId);
+        Optional<UserEntity> result = userTable.findById(userId);
 
         // then
         assertThat(result).isPresent();
@@ -65,7 +66,7 @@ class UserTableTest {
         Long userId = 999L;
 
         // when
-        Optional<User> result = userTable.findById(userId);
+        Optional<UserEntity> result = userTable.findById(userId);
 
         // then
         assertThat(result).isEmpty();

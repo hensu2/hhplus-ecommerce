@@ -1,5 +1,6 @@
 package com.hhplus.ecommerce.infrastructure.user;
 
+import com.hhplus.ecommerce.domain.user.UserEntity;
 import com.hhplus.ecommerce.domain.user.UserRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,17 +17,17 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Optional<User> findById(Long id) {
+    public Optional<UserEntity> findById(Long id) {
         return userTable.findById(id);
     }
 
     @Override
-    public List<User> findAll() {
+    public List<UserEntity> findAll() {
         return userTable.findAll();
     }
 
     @Override
-    public User save(User user) {
+    public UserEntity save(UserEntity user) {
         return userTable.save(user);
     }
 }

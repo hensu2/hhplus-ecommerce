@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.application.user;
 
+import com.hhplus.ecommerce.domain.user.UserEntity;
 import com.hhplus.ecommerce.domain.user.UserRepository;
-import com.hhplus.ecommerce.infrastructure.user.User;
 import com.hhplus.ecommerce.presentation.user.res.UserResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,15 +28,15 @@ class GetUsersUseCaseTest {
     @InjectMocks
     private GetUsersUseCase getUsersUseCase;
 
-    private List<User> testUsers;
+    private List<UserEntity> testUsers;
 
     @BeforeEach
     void setUp() {
         long timestamp = System.currentTimeMillis();
         testUsers = Arrays.asList(
-            new User(1L, "user1", 50000L, "USER", timestamp, timestamp),
-            new User(2L, "user2", 100000L, "ADMIN", timestamp, timestamp),
-            new User(3L, "user3", 30000L, "USER", timestamp, timestamp)
+            new UserEntity(1L, "user1", 50000L, "USER", timestamp, timestamp),
+            new UserEntity(2L, "user2", 100000L, "ADMIN", timestamp, timestamp),
+            new UserEntity(3L, "user3", 30000L, "USER", timestamp, timestamp)
         );
     }
 

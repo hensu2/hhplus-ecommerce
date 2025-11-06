@@ -1,5 +1,6 @@
 package com.hhplus.ecommerce.presentation.product;
 
+import com.hhplus.ecommerce.application.product.GetProductUseCase;
 import com.hhplus.ecommerce.application.product.GetProductsUseCase;
 import com.hhplus.ecommerce.presentation.product.res.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,8 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Tag(name = "상품 관리", description = "상품 조회 API")
 @RestController
@@ -17,21 +17,12 @@ import java.util.stream.Collectors;
 public class ProductController {
 
     private final GetProductsUseCase getProductsUseCase;
+    private final GetProductUseCase getProductUseCase;
 
-    public ProductController(GetProductsUseCase getProductsUseCase) {
+    public ProductController(GetProductsUseCase getProductsUseCase, GetProductUseCase getProductUseCase) {
         this.getProductsUseCase = getProductsUseCase;
+        this.getProductUseCase = getProductUseCase;
     }
-
-    private static final Map<Long, List<ProductOptionResponse>> PRODUCT_OPTIONS = Map.of(
-        1L, List.of(
-            new ProductOptionResponse(1L, "색상:블랙", 0, 100),
-            new ProductOptionResponse(2L, "색상:실버", 10000, 50)
-        ),
-        2L, List.of(
-            new ProductOptionResponse(3L, "축:청축", 0, 80),
-            new ProductOptionResponse(4L, "축:적축", 0, 70)
-        )
-    );
 
     // 상품 목록 조회 (GET /api/products)
     @Operation(summary = "상품 목록 조회", description = "상품 목록을 페이징하여 조회합니다.")
@@ -55,22 +46,8 @@ public class ProductController {
     @Operation(summary = "상품 상세 조회", description = "특정 상품의 상세 정보와 옵션, 재고를 조회합니다.")
     @GetMapping("/{id}")
     public ResponseEntity<ProductDetailResponse> getProductDetail(@PathVariable Long id) {
-        List<ProductResponse> products = getProductsUseCase.execute();
-        ProductResponse product = products.stream()
-            .filter(p -> p.getId().equals(id))
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다."));
-
-        List<ProductOptionResponse> options = PRODUCT_OPTIONS.getOrDefault(id, List.of());
-
-        return ResponseEntity.ok(new ProductDetailResponse(
-            product.getId(),
-            product.getProductName(),
-            product.getContent(),
-            product.getPrice(),
-            options,
-            product.getCreatedAt()
-        ));
+        ProductDetailResponse productDetail = getProductUseCase.execute(id);
+        return ResponseEntity.ok(productDetail);
     }
 
     // 인기 상품 조회 (GET /api/products/popular)

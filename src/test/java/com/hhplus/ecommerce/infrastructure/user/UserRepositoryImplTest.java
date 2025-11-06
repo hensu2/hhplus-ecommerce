@@ -1,5 +1,6 @@
 package com.hhplus.ecommerce.infrastructure.user;
 
+import com.hhplus.ecommerce.domain.user.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,12 +27,12 @@ class UserRepositoryImplTest {
     @InjectMocks
     private UserRepositoryImpl userRepository;
 
-    private User testUser;
+    private UserEntity testUser;
 
     @BeforeEach
     void setUp() {
         long timestamp = System.currentTimeMillis();
-        testUser = new User(1L, "testuser", 50000L, "USER", timestamp, timestamp);
+        testUser = new UserEntity(1L, "testuser", 50000L, "USER", timestamp, timestamp);
     }
 
     @Test
@@ -42,7 +43,7 @@ class UserRepositoryImplTest {
         given(userTable.findById(userId)).willReturn(Optional.of(testUser));
 
         // when
-        Optional<User> result = userRepository.findById(userId);
+        Optional<UserEntity> result = userRepository.findById(userId);
 
         // then
         assertThat(result).isPresent();
@@ -58,7 +59,7 @@ class UserRepositoryImplTest {
         given(userTable.findById(userId)).willReturn(Optional.empty());
 
         // when
-        Optional<User> result = userRepository.findById(userId);
+        Optional<UserEntity> result = userRepository.findById(userId);
 
         // then
         assertThat(result).isEmpty();
@@ -70,15 +71,15 @@ class UserRepositoryImplTest {
     void findAll_ReturnsAllUsers() {
         // given
         long timestamp = System.currentTimeMillis();
-        List<User> users = Arrays.asList(
-            new User(1L, "user1", 50000L, "USER", timestamp, timestamp),
-            new User(2L, "user2", 100000L, "ADMIN", timestamp, timestamp),
-            new User(3L, "user3", 30000L, "USER", timestamp, timestamp)
+        List<UserEntity> users = Arrays.asList(
+            new UserEntity(1L, "user1", 50000L, "USER", timestamp, timestamp),
+            new UserEntity(2L, "user2", 100000L, "ADMIN", timestamp, timestamp),
+            new UserEntity(3L, "user3", 30000L, "USER", timestamp, timestamp)
         );
         given(userTable.findAll()).willReturn(users);
 
         // when
-        List<User> result = userRepository.findAll();
+        List<UserEntity> result = userRepository.findAll();
 
         // then
         assertThat(result).isNotNull();
@@ -94,7 +95,7 @@ class UserRepositoryImplTest {
         given(userTable.findAll()).willReturn(List.of());
 
         // when
-        List<User> result = userRepository.findAll();
+        List<UserEntity> result = userRepository.findAll();
 
         // then
         assertThat(result).isNotNull();
@@ -107,12 +108,12 @@ class UserRepositoryImplTest {
     void save_NewUser_ReturnsSavedUser() {
         // given
         long timestamp = System.currentTimeMillis();
-        User newUser = new User(0L, "newuser", 10000L, "USER", 0L, 0L);
-        User savedUser = new User(4L, "newuser", 10000L, "USER", timestamp, timestamp);
+        UserEntity newUser = new UserEntity(0L, "newuser", 10000L, "USER", 0L, 0L);
+        UserEntity savedUser = new UserEntity(4L, "newuser", 10000L, "USER", timestamp, timestamp);
         given(userTable.save(newUser)).willReturn(savedUser);
 
         // when
-        User result = userRepository.save(newUser);
+        UserEntity result = userRepository.save(newUser);
 
         // then
         assertThat(result).isNotNull();

@@ -1,9 +1,9 @@
 package com.hhplus.ecommerce.domain.product;
 
-import com.hhplus.ecommerce.infrastructure.product.Product;
-
 import java.util.List;
+import java.util.Optional;
 
 public interface ProductRepository {
-    List<Product> findAll();
+    List<ProductEntity> findAll();
+    Optional<ProductEntity> findById(Long id);
 }

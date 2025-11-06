@@ -1,7 +1,9 @@
 package com.hhplus.ecommerce.application.user;
 
+import com.hhplus.ecommerce.common.exception.InvalidInputException;
+import com.hhplus.ecommerce.common.exception.UserNotFoundException;
+import com.hhplus.ecommerce.domain.user.UserEntity;
 import com.hhplus.ecommerce.domain.user.UserRepository;
-import com.hhplus.ecommerce.infrastructure.user.User;
 import com.hhplus.ecommerce.presentation.user.res.UserResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -28,12 +29,12 @@ class GetUserUseCaseTest {
     @InjectMocks
     private GetUserUseCase getUserUseCase;
 
-    private User testUser;
+    private UserEntity testUser;
 
     @BeforeEach
     void setUp() {
         long timestamp = System.currentTimeMillis();
-        testUser = new User(1L, "testuser", 50000L, "USER", timestamp, timestamp);
+        testUser = new UserEntity(1L, "testuser", 50000L, "USER", timestamp, timestamp);
     }
 
     @Test
@@ -63,7 +64,7 @@ class GetUserUseCaseTest {
 
         // when & then
         assertThatThrownBy(() -> getUserUseCase.execute(nullId))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(InvalidInputException.class)
             .hasMessage("User ID cannot be null");
     }
 
@@ -75,7 +76,7 @@ class GetUserUseCaseTest {
 
         // when & then
         assertThatThrownBy(() -> getUserUseCase.execute(invalidId))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(InvalidInputException.class)
             .hasMessage("User ID must be greater than 0");
     }
 
@@ -88,7 +89,7 @@ class GetUserUseCaseTest {
 
         // when & then
         assertThatThrownBy(() -> getUserUseCase.execute(userId))
-            .isInstanceOf(RuntimeException.class)
+            .isInstanceOf(UserNotFoundException.class)
             .hasMessage("사용자를 찾을 수 없습니다.");
         verify(userRepository).findById(userId);
     }

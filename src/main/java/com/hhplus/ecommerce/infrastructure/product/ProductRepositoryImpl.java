@@ -1,9 +1,11 @@
 package com.hhplus.ecommerce.infrastructure.product;
 
+import com.hhplus.ecommerce.domain.product.ProductEntity;
 import com.hhplus.ecommerce.domain.product.ProductRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class ProductRepositoryImpl implements ProductRepository {
@@ -15,7 +17,12 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public List<Product> findAll() {
+    public List<ProductEntity> findAll() {
         return productTable.findAll();
+    }
+
+    @Override
+    public Optional<ProductEntity> findById(Long id) {
+        return productTable.findById(id);
     }
 }

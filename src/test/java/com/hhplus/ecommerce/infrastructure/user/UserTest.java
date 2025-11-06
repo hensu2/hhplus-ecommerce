@@ -1,12 +1,14 @@
 package com.hhplus.ecommerce.infrastructure.user;
 
+import com.hhplus.ecommerce.common.exception.InvalidInputException;
+import com.hhplus.ecommerce.domain.user.UserEntity;
 import com.hhplus.ecommerce.presentation.user.res.UserResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
 
-@DisplayName("User 도메인 모델 테스트")
+@DisplayName("UserEntity 도메인 모델 테스트")
 class UserTest {
 
     @Test
@@ -16,7 +18,7 @@ class UserTest {
         Long validId = 1L;
 
         // when & then
-        assertThatCode(() -> User.validateUserId(validId))
+        assertThatCode(() -> UserEntity.validateUserId(validId))
             .doesNotThrowAnyException();
     }
 
@@ -27,8 +29,8 @@ class UserTest {
         Long nullId = null;
 
         // when & then
-        assertThatThrownBy(() -> User.validateUserId(nullId))
-            .isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> UserEntity.validateUserId(nullId))
+            .isInstanceOf(InvalidInputException.class)
             .hasMessage("User ID cannot be null");
     }
 
@@ -40,21 +42,21 @@ class UserTest {
         Long negativeId = -1L;
 
         // when & then
-        assertThatThrownBy(() -> User.validateUserId(zeroId))
-            .isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> UserEntity.validateUserId(zeroId))
+            .isInstanceOf(InvalidInputException.class)
             .hasMessage("User ID must be greater than 0");
 
-        assertThatThrownBy(() -> User.validateUserId(negativeId))
-            .isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> UserEntity.validateUserId(negativeId))
+            .isInstanceOf(InvalidInputException.class)
             .hasMessage("User ID must be greater than 0");
     }
 
     @Test
-    @DisplayName("User를 UserResponse로 변환한다")
+    @DisplayName("UserEntity를 UserResponse로 변환한다")
     void toUserResponse_Success() {
         // given
         long timestamp = System.currentTimeMillis();
-        User user = new User(1L, "testuser", 50000L, "USER", timestamp, timestamp);
+        UserEntity user = new UserEntity(1L, "testuser", 50000L, "USER", timestamp, timestamp);
 
         // when
         UserResponse response = user.toUserResponse();

@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.application.user;
 
+import com.hhplus.ecommerce.domain.user.UserEntity;
 import com.hhplus.ecommerce.domain.user.UserRepository;
-import com.hhplus.ecommerce.infrastructure.user.User;
 import com.hhplus.ecommerce.presentation.user.res.UserResponse;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +17,10 @@ public class GetUsersUseCase {
     }
 
     public List<UserResponse> execute() {
-        List<User> users = userRepository.findAll();
+        List<UserEntity> users = userRepository.findAll();
 
         return users.stream()
-            .map(User::toUserResponse)
+            .map(UserEntity::toUserResponse)
             .toList();
     }
 }
