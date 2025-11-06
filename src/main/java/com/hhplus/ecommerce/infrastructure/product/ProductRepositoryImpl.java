@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.infrastructure.product;
 
 import com.hhplus.ecommerce.domain.product.ProductEntity;
-import com.hhplus.ecommerce.domain.product.ProductRepository;
+import com.hhplus.ecommerce.infrastructure.product.memory.ProductTable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

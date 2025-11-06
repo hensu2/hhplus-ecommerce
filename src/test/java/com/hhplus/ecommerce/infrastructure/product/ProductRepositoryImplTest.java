@@ -1,6 +1,7 @@
 package com.hhplus.ecommerce.infrastructure.product;
 
 import com.hhplus.ecommerce.domain.product.ProductEntity;
+import com.hhplus.ecommerce.infrastructure.product.memory.ProductTable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

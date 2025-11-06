@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.infrastructure.user;
 
 import com.hhplus.ecommerce.domain.user.UserEntity;
-import com.hhplus.ecommerce.domain.user.UserRepository;
+import com.hhplus.ecommerce.infrastructure.user.memory.UserTable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

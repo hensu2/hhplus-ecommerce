@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.application.user;
 
 import com.hhplus.ecommerce.domain.user.UserEntity;
-import com.hhplus.ecommerce.domain.user.UserRepository;
+import com.hhplus.ecommerce.infrastructure.user.UserRepository;
 import com.hhplus.ecommerce.presentation.user.req.CreateUserRequest;
 import com.hhplus.ecommerce.presentation.user.res.UserResponse;
 import org.springframework.stereotype.Service;

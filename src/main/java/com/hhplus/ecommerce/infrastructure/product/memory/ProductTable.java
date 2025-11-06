@@ -1,4 +1,4 @@
-package com.hhplus.ecommerce.infrastructure.product;
+package com.hhplus.ecommerce.infrastructure.product.memory;
 
 import com.hhplus.ecommerce.domain.product.ProductEntity;
 import org.springframework.stereotype.Component;

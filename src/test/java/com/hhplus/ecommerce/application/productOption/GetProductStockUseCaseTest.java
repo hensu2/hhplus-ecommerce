@@ -1,12 +1,11 @@
 package com.hhplus.ecommerce.application.productOption;
 
-import com.hhplus.ecommerce.application.productOption.GetProductStockUseCase;
 import com.hhplus.ecommerce.common.exception.InvalidInputException;
 import com.hhplus.ecommerce.common.exception.ProductNotFoundException;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
-import com.hhplus.ecommerce.domain.product.ProductRepository;
+import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
-import com.hhplus.ecommerce.domain.productOption.ProductOptionRepository;
+import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
 import com.hhplus.ecommerce.presentation.productOption.res.ProductStockResponse;
 import com.hhplus.ecommerce.presentation.productOption.res.StockOptionResponse;
 import org.junit.jupiter.api.BeforeEach;

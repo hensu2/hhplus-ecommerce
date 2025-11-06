@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.application.product;
 
 import com.hhplus.ecommerce.domain.product.ProductEntity;
-import com.hhplus.ecommerce.domain.product.ProductRepository;
+import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.presentation.product.res.ProductResponse;
 import org.springframework.stereotype.Service;
 

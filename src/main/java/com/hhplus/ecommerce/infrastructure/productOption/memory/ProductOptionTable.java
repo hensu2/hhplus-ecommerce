@@ -1,4 +1,4 @@
-package com.hhplus.ecommerce.infrastructure.productOption;
+package com.hhplus.ecommerce.infrastructure.productOption.memory;
 
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import jakarta.annotation.PostConstruct;
@@ -32,5 +32,14 @@ public class ProductOptionTable {
         return table.values().stream()
             .filter(option -> option.productId() == productId)
             .collect(Collectors.toList());
+    }
+
+    public ProductOptionEntity findById(Long id) {
+        return table.get(id);
+    }
+
+    public ProductOptionEntity save(ProductOptionEntity productOption) {
+        table.put(productOption.id(), productOption);
+        return productOption;
     }
 }

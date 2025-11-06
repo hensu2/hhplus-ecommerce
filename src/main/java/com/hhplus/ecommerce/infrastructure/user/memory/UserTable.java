@@ -1,4 +1,4 @@
-package com.hhplus.ecommerce.infrastructure.user;
+package com.hhplus.ecommerce.infrastructure.user.memory;
 
 import com.hhplus.ecommerce.domain.user.UserEntity;
 import org.springframework.stereotype.Component;

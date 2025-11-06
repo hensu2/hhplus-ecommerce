@@ -2,8 +2,8 @@ package com.hhplus.ecommerce.application.product;
 
 import com.hhplus.ecommerce.common.exception.ProductNotFoundException;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
-import com.hhplus.ecommerce.domain.productOption.ProductOptionRepository;
-import com.hhplus.ecommerce.domain.product.ProductRepository;
+import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
+import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.presentation.product.res.ProductDetailResponse;
 import com.hhplus.ecommerce.presentation.product.res.ProductOptionResponse;

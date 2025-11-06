@@ -1,6 +1,7 @@
 package com.hhplus.ecommerce.infrastructure.user;
 
 import com.hhplus.ecommerce.domain.user.UserEntity;
+import com.hhplus.ecommerce.infrastructure.user.memory.UserTable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
