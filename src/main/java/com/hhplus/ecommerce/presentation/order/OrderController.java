@@ -1,5 +1,7 @@
 package com.hhplus.ecommerce.presentation.order;
 
+import com.hhplus.ecommerce.application.order.CancelOrderUseCase;
+import com.hhplus.ecommerce.application.order.CompleteOrderUseCase;
 import com.hhplus.ecommerce.application.order.CreateOrderUseCase;
 import com.hhplus.ecommerce.presentation.order.req.CreateOrderRequest;
 import com.hhplus.ecommerce.presentation.order.res.OrderResponse;
@@ -15,9 +17,15 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final CreateOrderUseCase createOrderUseCase;
+    private final CancelOrderUseCase cancelOrderUseCase;
+    private final CompleteOrderUseCase completeOrderUseCase;
 
-    public OrderController(CreateOrderUseCase createOrderUseCase) {
+    public OrderController(CreateOrderUseCase createOrderUseCase,
+                          CancelOrderUseCase cancelOrderUseCase,
+                          CompleteOrderUseCase completeOrderUseCase) {
         this.createOrderUseCase = createOrderUseCase;
+        this.cancelOrderUseCase = cancelOrderUseCase;
+        this.completeOrderUseCase = completeOrderUseCase;
     }
 
     @Operation(summary = "주문 생성", description = "상품을 주문합니다. 재고 차감 및 쿠폰 적용이 포함됩니다.")
@@ -25,5 +33,19 @@ public class OrderController {
     public ResponseEntity<OrderResponse> createOrder(@RequestBody CreateOrderRequest request) {
         OrderResponse response = createOrderUseCase.execute(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "주문 취소", description = "주문을 취소합니다.")
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable Long orderId) {
+        OrderResponse response = cancelOrderUseCase.execute(orderId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "주문 완료", description = "결제 후 주문을 완료 상태로 변경합니다.")
+    @PostMapping("/{orderId}/complete")
+    public ResponseEntity<OrderResponse> completeOrder(@PathVariable Long orderId) {
+        OrderResponse response = completeOrderUseCase.execute(orderId);
+        return ResponseEntity.ok(response);
     }
 }

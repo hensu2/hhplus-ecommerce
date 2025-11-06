@@ -1,0 +1,66 @@
+package com.hhplus.ecommerce.application.order;
+
+import com.hhplus.ecommerce.domain.order.OrderEntity;
+import com.hhplus.ecommerce.domain.order.OrderStatus;
+import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
+import com.hhplus.ecommerce.presentation.order.res.OrderResponse;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.List;
+
+@Service
+public class CancelOrderUseCase {
+
+    private final OrderRepository orderRepository;
+
+    public CancelOrderUseCase(OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
+    }
+
+    public OrderResponse execute(long orderId) {
+        // 1. 주문 정보 조회
+        OrderEntity order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new IllegalArgumentException("주문 정보를 찾을 수 없습니다."));
+
+        // 2. 이미 취소된 주문인지 확인
+        if (order.status() == OrderStatus.CANCELLED) {
+            throw new IllegalStateException("이미 취소된 주문입니다.");
+        }
+
+        // 3. 주문 취소 처리
+        long now = System.currentTimeMillis();
+        OrderEntity cancelledOrder = new OrderEntity(
+            order.id(),
+            order.userId(),
+            order.totalAmount(),
+            order.discountAmount(),
+            order.finalAmount(),
+            order.couponHistoryId(),
+            OrderStatus.CANCELLED,
+            order.createdAt(),
+            now
+        );
+        OrderEntity savedOrder = orderRepository.save(cancelledOrder);
+
+        // 4. 응답 생성
+        return new OrderResponse(
+            savedOrder.id(),
+            savedOrder.userId(),
+            savedOrder.totalAmount(),
+            savedOrder.discountAmount(),
+            savedOrder.finalAmount(),
+            savedOrder.status().name(),
+            List.of(), // 주문 아이템은 간단히 빈 리스트로 처리
+            formatTimestamp(savedOrder.createdAt())
+        );
+    }
+
+    private String formatTimestamp(long timestamp) {
+        return Instant.ofEpochMilli(timestamp)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
+            .toString();
+    }
+}

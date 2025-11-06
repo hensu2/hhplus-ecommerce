@@ -6,6 +6,8 @@ import com.hhplus.ecommerce.infrastructure.order.memory.OrderItemTable;
 import com.hhplus.ecommerce.infrastructure.order.memory.OrderTable;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public class OrderRepositoryImpl implements OrderRepository {
 
@@ -25,5 +27,10 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public OrderItemEntity saveItem(OrderItemEntity orderItem) {
         return orderItemTable.save(orderItem);
+    }
+
+    @Override
+    public Optional<OrderEntity> findById(long orderId) {
+        return orderTable.findById(orderId);
     }
 }

@@ -3,6 +3,7 @@ package com.hhplus.ecommerce.infrastructure.order.memory;
 import com.hhplus.ecommerce.domain.order.OrderEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -26,5 +27,9 @@ public class OrderTable {
         );
         table.put(id, newOrder);
         return newOrder;
+    }
+
+    public Optional<OrderEntity> findById(long orderId) {
+        return Optional.ofNullable(table.get(orderId));
     }
 }
