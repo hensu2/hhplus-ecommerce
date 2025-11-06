@@ -1,6 +1,7 @@
 package com.hhplus.ecommerce.presentation.coupon;
 
 import com.hhplus.ecommerce.application.coupon.GetCouponsUseCase;
+import com.hhplus.ecommerce.application.coupon.IssueCouponUseCase;
 import com.hhplus.ecommerce.presentation.coupon.req.ValidateCouponRequest;
 import com.hhplus.ecommerce.presentation.coupon.res.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,9 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Tag(name = "쿠폰", description = "쿠폰 관리 API")
@@ -20,17 +19,12 @@ import java.util.stream.Collectors;
 public class CouponController {
 
     private final GetCouponsUseCase getCouponsUseCase;
+    private final IssueCouponUseCase issueCouponUseCase;
 
-    private static final AtomicLong COUPON_HISTORY_ID_GENERATOR = new AtomicLong(2);
     private static final Map<Long, CouponResponse> MY_COUPONS = new LinkedHashMap<>();
-    private static final Map<Long, Integer> COUPON_STOCK = new HashMap<>();
 
     static {
-        // 쿠폰 재고 초기화
-        COUPON_STOCK.put(1L, 100);
-        COUPON_STOCK.put(2L, 50);
-
-        // 초기 발급 쿠폰
+        // 초기 발급 쿠폰 (테스트용)
         MY_COUPONS.put(1L, new CouponResponse(
             1L, 1L, "신규 회원 10% 할인 쿠폰", "PERCENT", 10, 10000, 5000,
             "2024-10-30T00:00:00", "2024-11-30T23:59:59", "ISSUED",
@@ -38,8 +32,9 @@ public class CouponController {
         ));
     }
 
-    public CouponController(GetCouponsUseCase getCouponsUseCase) {
+    public CouponController(GetCouponsUseCase getCouponsUseCase, IssueCouponUseCase issueCouponUseCase) {
         this.getCouponsUseCase = getCouponsUseCase;
+        this.issueCouponUseCase = issueCouponUseCase;
     }
 
     // 쿠폰 목록 조회 (GET /api/coupons)
@@ -53,42 +48,10 @@ public class CouponController {
     // 쿠폰 발급 (POST /api/coupons/{couponId}/issue)
     @Operation(summary = "쿠폰 발급", description = "선착순 쿠폰을 발급받습니다. 한정 수량이며, 동시성 제어가 적용됩니다.")
     @PostMapping("/{couponId}/issue")
-    public ResponseEntity<IssueCouponResponse> issueCoupon(@PathVariable Long couponId) {
-        // 재고 확인
-        Integer stock = COUPON_STOCK.getOrDefault(couponId, 0);
-        if (stock <= 0) {
-            throw new RuntimeException("쿠폰이 모두 소진되었습니다.");
-        }
-
-        // 이미 발급 확인 (간단한 Mock)
-        boolean alreadyIssued = MY_COUPONS.values().stream()
-                .anyMatch(c -> c.getCouponId().equals(couponId) && "ISSUED".equals(c.getStatus()));
-
-        if (alreadyIssued) {
-            throw new RuntimeException("이미 발급받은 쿠폰입니다.");
-        }
-
-        // 재고 차감
-        COUPON_STOCK.put(couponId, stock - 1);
-
-        Long historyId = COUPON_HISTORY_ID_GENERATOR.getAndIncrement();
-        IssueCouponResponse response = new IssueCouponResponse(
-            historyId,
-            couponId,
-            "신규 회원 10% 할인 쿠폰",
-            "PERCENT",
-            10,
-            LocalDateTime.now().toString(),
-            LocalDateTime.now().plusDays(30).toString(),
-            "ISSUED",
-            LocalDateTime.now().toString()
-        );
-
-        MY_COUPONS.put(historyId, new CouponResponse(
-            historyId, couponId, "신규 회원 10% 할인 쿠폰", "PERCENT", 10, 10000, 5000,
-            response.getValidFrom(), response.getValidUntil(), "ISSUED", response.getIssuedAt(), null
-        ));
-
+    public ResponseEntity<IssueCouponResponse> issueCoupon(
+            @PathVariable Long couponId,
+            @RequestParam Long userId) {
+        IssueCouponResponse response = issueCouponUseCase.execute(userId, couponId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

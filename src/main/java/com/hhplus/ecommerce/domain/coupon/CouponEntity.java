@@ -38,4 +38,23 @@ public record CouponEntity(
             .toLocalDateTime()
             .toString();
     }
+
+    public CouponEntity decreaseStock() {
+        if (this.stock <= 0) {
+            throw new IllegalStateException("쿠폰 재고가 부족합니다.");
+        }
+        return new CouponEntity(
+            this.id,
+            this.couponName,
+            this.discountType,
+            this.discountAmount,
+            this.useMinAmount,
+            this.useMaxAmount,
+            this.stock - 1,
+            this.validFrom,
+            this.validUntil,
+            this.createdAt,
+            System.currentTimeMillis()
+        );
+    }
 }

@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -55,5 +56,14 @@ public class CouponTable {
 
     public List<CouponEntity> findAll() {
         return new ArrayList<>(table.values());
+    }
+
+    public Optional<CouponEntity> findById(long couponId) {
+        return Optional.ofNullable(table.get(couponId));
+    }
+
+    public CouponEntity save(CouponEntity coupon) {
+        table.put(coupon.id(), coupon);
+        return coupon;
     }
 }
