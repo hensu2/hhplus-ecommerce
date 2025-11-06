@@ -9,10 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OrderItemResponse {
     private Long productId;
+    private Long productOptionId;
     private String productName;
-    private Long optionId;
     private String optionType;
     private Integer quantity;
-    private Integer unitPrice;
-    private Integer totalPrice;
+    private Integer price;
 }

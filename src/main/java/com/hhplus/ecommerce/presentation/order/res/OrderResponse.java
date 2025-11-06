@@ -12,11 +12,10 @@ import java.util.List;
 public class OrderResponse {
     private Long orderId;
     private Long userId;
-    private String status;
-    private List<OrderItemResponse> items;
     private Integer totalAmount;
     private Integer discountAmount;
-    private Integer pointDiscount;
     private Integer finalAmount;
-    private String orderedAt;
+    private String status;
+    private List<OrderItemResponse> items;
+    private String createdAt;
 }

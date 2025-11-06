@@ -4,13 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateOrderRequest {
-    private Long userId;
-    private List<OrderItemRequest> items;
-    private Long couponHistoryId;
+public class OrderItemRequest {
+    private Long productOptionId;
+    private Integer quantity;
 }
