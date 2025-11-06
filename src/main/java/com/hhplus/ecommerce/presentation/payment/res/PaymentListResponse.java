@@ -4,14 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PaymentResponse {
-    private Long paymentId;
-    private Long orderId;
-    private Long userId;
-    private Integer amount;
-    private String status;
-    private String createdAt;
+public class PaymentListResponse {
+    private List<PaymentResponse> payments;
 }
