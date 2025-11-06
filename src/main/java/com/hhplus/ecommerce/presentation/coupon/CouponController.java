@@ -1,7 +1,9 @@
 package com.hhplus.ecommerce.presentation.coupon;
 
 import com.hhplus.ecommerce.application.coupon.GetCouponsUseCase;
+import com.hhplus.ecommerce.application.coupon.GetMyCouponsUseCase;
 import com.hhplus.ecommerce.application.coupon.IssueCouponUseCase;
+import com.hhplus.ecommerce.domain.coupon.CouponStatus;
 import com.hhplus.ecommerce.presentation.coupon.req.ValidateCouponRequest;
 import com.hhplus.ecommerce.presentation.coupon.res.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +22,7 @@ public class CouponController {
 
     private final GetCouponsUseCase getCouponsUseCase;
     private final IssueCouponUseCase issueCouponUseCase;
+    private final GetMyCouponsUseCase getMyCouponsUseCase;
 
     private static final Map<Long, CouponResponse> MY_COUPONS = new LinkedHashMap<>();
 
@@ -32,9 +35,10 @@ public class CouponController {
         ));
     }
 
-    public CouponController(GetCouponsUseCase getCouponsUseCase, IssueCouponUseCase issueCouponUseCase) {
+    public CouponController(GetCouponsUseCase getCouponsUseCase, IssueCouponUseCase issueCouponUseCase, GetMyCouponsUseCase getMyCouponsUseCase) {
         this.getCouponsUseCase = getCouponsUseCase;
         this.issueCouponUseCase = issueCouponUseCase;
+        this.getMyCouponsUseCase = getMyCouponsUseCase;
     }
 
     // 쿠폰 목록 조회 (GET /api/coupons)
@@ -58,15 +62,11 @@ public class CouponController {
     // 내 쿠폰 조회 (GET /api/coupons/me)
     @Operation(summary = "내 쿠폰 조회", description = "발급받은 쿠폰 목록을 조회합니다.")
     @GetMapping("/me")
-    public MyCouponListResponse getMyCoupons(@RequestParam(required = false) String status) {
-        List<CouponResponse> coupons = new ArrayList<>(MY_COUPONS.values());
-
-        if (status != null) {
-            coupons = coupons.stream()
-                    .filter(c -> status.equals(c.getStatus()))
-                    .collect(Collectors.toList());
-        }
-
+    public MyCouponListResponse getMyCoupons(
+            @RequestParam Long userId,
+            @RequestParam(required = false) String status) {
+        CouponStatus couponStatus = status != null ? CouponStatus.valueOf(status) : null;
+        List<CouponResponse> coupons = getMyCouponsUseCase.execute(userId, couponStatus);
         return new MyCouponListResponse(coupons);
     }
 
