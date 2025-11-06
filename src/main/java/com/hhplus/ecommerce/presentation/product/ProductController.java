@@ -1,5 +1,6 @@
 package com.hhplus.ecommerce.presentation.product;
 
+import com.hhplus.ecommerce.application.product.GetProductsUseCase;
 import com.hhplus.ecommerce.presentation.product.res.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,14 +16,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/products")
 public class ProductController {
 
-    // 간단한 메모리 데이터
-    private static final List<ProductResponse> PRODUCTS = List.of(
-        new ProductResponse(1L, "노트북", "고성능 노트북", 890000, "2024-10-30T00:00:00"),
-        new ProductResponse(2L, "키보드", "기계식 키보드", 120000, "2024-10-30T00:00:00"),
-        new ProductResponse(3L, "마우스", "게이밍 마우스", 85000, "2024-10-30T00:00:00"),
-        new ProductResponse(4L, "모니터", "27인치 모니터", 350000, "2024-10-30T00:00:00"),
-        new ProductResponse(5L, "헤드셋", "무선 헤드셋", 150000, "2024-10-30T00:00:00")
-    );
+    private final GetProductsUseCase getProductsUseCase;
+
+    public ProductController(GetProductsUseCase getProductsUseCase) {
+        this.getProductsUseCase = getProductsUseCase;
+    }
 
     private static final Map<Long, List<ProductOptionResponse>> PRODUCT_OPTIONS = Map.of(
         1L, List.of(
@@ -42,9 +40,11 @@ public class ProductController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
+        List<ProductResponse> products = getProductsUseCase.execute();
+
         return new ProductListResponse(
-            PRODUCTS,
-            PRODUCTS.size(),
+            products,
+            products.size(),
             1,
             size,
             page
@@ -55,7 +55,8 @@ public class ProductController {
     @Operation(summary = "상품 상세 조회", description = "특정 상품의 상세 정보와 옵션, 재고를 조회합니다.")
     @GetMapping("/{id}")
     public ResponseEntity<ProductDetailResponse> getProductDetail(@PathVariable Long id) {
-        ProductResponse product = PRODUCTS.stream()
+        List<ProductResponse> products = getProductsUseCase.execute();
+        ProductResponse product = products.stream()
             .filter(p -> p.getId().equals(id))
             .findFirst()
             .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다."));
