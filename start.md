@@ -176,6 +176,7 @@ docker compose stop
 
 # 컨테이너 재시작
 docker compose restart
+docker compose stop
 
 # 컨테이너 중지 및 삭제
 docker compose down
