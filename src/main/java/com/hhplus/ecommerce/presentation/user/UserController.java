@@ -7,6 +7,7 @@ import com.hhplus.ecommerce.presentation.user.req.CreateUserRequest;
 import com.hhplus.ecommerce.presentation.user.res.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,17 +16,12 @@ import java.util.List;
 @Tag(name = "사용자", description = "사용자 관리 API")
 @RestController
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final GetUserUseCase getUserUseCase;
     private final GetUsersUseCase getUsersUseCase;
     private final CreateUserUseCase createUserUseCase;
-
-    public UserController(GetUserUseCase getUserUseCase, GetUsersUseCase getUsersUseCase, CreateUserUseCase createUserUseCase) {
-        this.getUserUseCase = getUserUseCase;
-        this.getUsersUseCase = getUsersUseCase;
-        this.createUserUseCase = createUserUseCase;
-    }
 
     // 사용자 조회 (GET /api/users/{id})
     @Operation(summary = "사용자 조회", description = "사용자 ID로 사용자 정보를 조회합니다.")

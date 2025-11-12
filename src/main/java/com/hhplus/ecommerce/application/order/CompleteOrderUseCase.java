@@ -4,6 +4,7 @@ import com.hhplus.ecommerce.domain.order.OrderEntity;
 import com.hhplus.ecommerce.domain.order.OrderStatus;
 import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
 import com.hhplus.ecommerce.presentation.order.res.OrderResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -11,13 +12,10 @@ import java.time.ZoneId;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CompleteOrderUseCase {
 
     private final OrderRepository orderRepository;
-
-    public CompleteOrderUseCase(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
-    }
 
     public OrderResponse execute(long orderId) {
         // 1. 주문 정보 조회

@@ -5,6 +5,7 @@ import com.hhplus.ecommerce.domain.product.ProductStatisticsEntity;
 import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.infrastructure.product.ProductStatisticsRepository;
 import com.hhplus.ecommerce.presentation.product.res.PopularProductResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -12,16 +13,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class GetPopularProductsUseCase {
 
     private final ProductRepository productRepository;
     private final ProductStatisticsRepository productStatisticsRepository;
-
-    public GetPopularProductsUseCase(ProductRepository productRepository,
-                                    ProductStatisticsRepository productStatisticsRepository) {
-        this.productRepository = productRepository;
-        this.productStatisticsRepository = productStatisticsRepository;
-    }
 
     public List<PopularProductResponse> execute(int limit) {
         // 1. 모든 상품 통계 조회

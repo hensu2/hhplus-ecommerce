@@ -1,20 +1,14 @@
 package com.hhplus.ecommerce.presentation.cart.res;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class AddCartItemResponse {
-    private Long id;
-    private Long productId;
-    private String productName;
-    private Long optionId;
-    private String optionType;
-    private Integer quantity;
-    private Integer unitPrice;
-    private Integer totalPrice;
-    private String addedAt;
+public record AddCartItemResponse(
+    Long id,
+    Long productId,
+    String productName,
+    Long optionId,
+    String optionType,
+    Integer quantity,
+    Integer unitPrice,
+    Integer totalPrice,
+    String addedAt
+) {
 }

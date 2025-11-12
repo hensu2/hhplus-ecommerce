@@ -8,6 +8,7 @@ import com.hhplus.ecommerce.presentation.payment.res.PaymentListResponse;
 import com.hhplus.ecommerce.presentation.payment.res.PaymentResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,19 +18,12 @@ import java.util.List;
 @Tag(name = "결제", description = "결제 관리 API")
 @RestController
 @RequestMapping("/api/payments")
+@RequiredArgsConstructor
 public class PaymentController {
 
     private final ProcessPaymentUseCase processPaymentUseCase;
     private final GetPaymentsUseCase getPaymentsUseCase;
     private final CancelPaymentUseCase cancelPaymentUseCase;
-
-    public PaymentController(ProcessPaymentUseCase processPaymentUseCase,
-                            GetPaymentsUseCase getPaymentsUseCase,
-                            CancelPaymentUseCase cancelPaymentUseCase) {
-        this.processPaymentUseCase = processPaymentUseCase;
-        this.getPaymentsUseCase = getPaymentsUseCase;
-        this.cancelPaymentUseCase = cancelPaymentUseCase;
-    }
 
     @Operation(summary = "결제 처리", description = "주문에 대한 결제를 처리합니다.")
     @PostMapping

@@ -2,12 +2,10 @@ package com.hhplus.ecommerce.presentation.product.res;
 
 import com.hhplus.ecommerce.common.dto.PageResponse;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Getter
-@NoArgsConstructor
 public class ProductListResponse extends PageResponse {
     private List<ProductResponse> content;
 

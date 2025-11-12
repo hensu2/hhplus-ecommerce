@@ -2,12 +2,10 @@ package com.hhplus.ecommerce.presentation.order.res;
 
 import com.hhplus.ecommerce.common.dto.PageResponse;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Getter
-@NoArgsConstructor
 public class OrderListResponse extends PageResponse {
     private List<OrderListItemResponse> content;
 

@@ -1,16 +1,10 @@
 package com.hhplus.ecommerce.presentation.order.req;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class CreateOrderRequest {
-    private Long userId;
-    private List<OrderItemRequest> items;
-    private Long couponHistoryId;
+public record CreateOrderRequest(
+    Long userId,
+    List<OrderItemRequest> items,
+    Long couponHistoryId
+) {
 }

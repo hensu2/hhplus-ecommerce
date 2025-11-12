@@ -5,25 +5,23 @@ import com.hhplus.ecommerce.domain.payment.PaymentStatus;
 import com.hhplus.ecommerce.infrastructure.payment.PaymentRepository;
 import com.hhplus.ecommerce.presentation.payment.req.ProcessPaymentRequest;
 import com.hhplus.ecommerce.presentation.payment.res.PaymentResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.ZoneId;
 
 @Service
+@RequiredArgsConstructor
 public class ProcessPaymentUseCase {
 
     private final PaymentRepository paymentRepository;
-
-    public ProcessPaymentUseCase(PaymentRepository paymentRepository) {
-        this.paymentRepository = paymentRepository;
-    }
 
     public PaymentResponse execute(ProcessPaymentRequest request) {
         long now = System.currentTimeMillis();
 
         // 1. 결제 금액 검증
-        if (request.getAmount() == null || request.getAmount() <= 0) {
+        if (request.amount() == null || request.amount() <= 0) {
             throw new IllegalArgumentException("결제 금액이 유효하지 않습니다.");
         }
 
@@ -33,9 +31,9 @@ public class ProcessPaymentUseCase {
         // 3. 결제 정보 저장
         PaymentEntity payment = new PaymentEntity(
             0L,
-            request.getOrderId(),
-            request.getUserId(),
-            request.getAmount(),
+            request.orderId(),
+            request.userId(),
+            request.amount(),
             paymentStatus,
             now,
             now

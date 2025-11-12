@@ -46,15 +46,15 @@ public class UserPointController {
     @Operation(summary = "포인트 충전", description = "사용자의 포인트를 충전합니다.")
     @PostMapping("/charge")
     public ResponseEntity<ChargePointResponse> chargePoint(@RequestBody ChargePointRequest request) {
-        if (request.getAmount() < 1000) {
+        if (request.amount() < 1000) {
             throw new RuntimeException("충전 금액은 1,000원 이상이어야 합니다.");
         }
 
-        currentPoint += request.getAmount();
+        currentPoint += request.amount();
 
         POINT_HISTORY.add(0, new PointHistoryItemResponse(
             HISTORY_ID_GENERATOR.getAndIncrement(),
-            request.getAmount(),
+            request.amount(),
             "EARN",
             "포인트 충전",
             LocalDateTime.now().toString()
@@ -62,7 +62,7 @@ public class UserPointController {
 
         return ResponseEntity.ok(new ChargePointResponse(
             1L,
-            request.getAmount(),
+            request.amount(),
             currentPoint,
             "EARN",
             LocalDateTime.now().toString()

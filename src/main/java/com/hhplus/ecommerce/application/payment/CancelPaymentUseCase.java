@@ -4,19 +4,17 @@ import com.hhplus.ecommerce.domain.payment.PaymentEntity;
 import com.hhplus.ecommerce.domain.payment.PaymentStatus;
 import com.hhplus.ecommerce.infrastructure.payment.PaymentRepository;
 import com.hhplus.ecommerce.presentation.payment.res.PaymentResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.ZoneId;
 
 @Service
+@RequiredArgsConstructor
 public class CancelPaymentUseCase {
 
     private final PaymentRepository paymentRepository;
-
-    public CancelPaymentUseCase(PaymentRepository paymentRepository) {
-        this.paymentRepository = paymentRepository;
-    }
 
     public PaymentResponse execute(long paymentId) {
         // 1. 결제 정보 조회

@@ -1,14 +1,8 @@
 package com.hhplus.ecommerce.presentation.payment.req;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class ProcessPaymentRequest {
-    private Long orderId;
-    private Long userId;
-    private Integer amount;
+public record ProcessPaymentRequest(
+    Long orderId,
+    Long userId,
+    Integer amount
+) {
 }

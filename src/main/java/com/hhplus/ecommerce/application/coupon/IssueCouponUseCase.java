@@ -5,16 +5,14 @@ import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponStatus;
 import com.hhplus.ecommerce.infrastructure.coupon.CouponRepository;
 import com.hhplus.ecommerce.presentation.coupon.res.IssueCouponResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class IssueCouponUseCase {
 
     private final CouponRepository couponRepository;
-
-    public IssueCouponUseCase(CouponRepository couponRepository) {
-        this.couponRepository = couponRepository;
-    }
 
     public IssueCouponResponse execute(long userId, long couponId) {
         // 1. 쿠폰 존재 여부 확인

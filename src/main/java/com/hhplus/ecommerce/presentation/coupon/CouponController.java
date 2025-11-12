@@ -8,6 +8,7 @@ import com.hhplus.ecommerce.presentation.coupon.req.ValidateCouponRequest;
 import com.hhplus.ecommerce.presentation.coupon.res.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 @Tag(name = "쿠폰", description = "쿠폰 관리 API")
 @RestController
 @RequestMapping("/api/coupons")
+@RequiredArgsConstructor
 public class CouponController {
 
     private final GetCouponsUseCase getCouponsUseCase;
@@ -33,12 +35,6 @@ public class CouponController {
             "2024-10-30T00:00:00", "2024-11-30T23:59:59", "ISSUED",
             "2024-10-30T00:00:00", null
         ));
-    }
-
-    public CouponController(GetCouponsUseCase getCouponsUseCase, IssueCouponUseCase issueCouponUseCase, GetMyCouponsUseCase getMyCouponsUseCase) {
-        this.getCouponsUseCase = getCouponsUseCase;
-        this.issueCouponUseCase = issueCouponUseCase;
-        this.getMyCouponsUseCase = getMyCouponsUseCase;
     }
 
     // 쿠폰 목록 조회 (GET /api/coupons)
@@ -84,22 +80,22 @@ public class CouponController {
             );
         }
 
-        if (request.getOrderAmount() < coupon.getUseMinAmount()) {
+        if (request.orderAmount() < coupon.useMinAmount()) {
             return new ValidateCouponResponse(
                 false, null, null,
-                String.format("최소 주문 금액(%,d원)을 충족하지 못했습니다.", coupon.getUseMinAmount())
+                "최소 주문 금액(" + coupon.useMinAmount() + "원)을 충족하지 못했습니다."
             );
         }
 
         int discountAmount;
-        if ("PERCENT".equals(coupon.getDiscountType())) {
-            discountAmount = request.getOrderAmount() * coupon.getDiscountAmount() / 100;
-            discountAmount = Math.min(discountAmount, coupon.getUseMaxAmount());
+        if ("PERCENT".equals(coupon.discountType())) {
+            discountAmount = request.orderAmount() * coupon.discountAmount() / 100;
+            discountAmount = Math.min(discountAmount, coupon.useMaxAmount());
         } else {
-            discountAmount = coupon.getDiscountAmount();
+            discountAmount = coupon.discountAmount();
         }
 
-        int finalAmount = request.getOrderAmount() - discountAmount;
+        int finalAmount = request.orderAmount() - discountAmount;
 
         return new ValidateCouponResponse(
             true, discountAmount, finalAmount, "쿠폰을 사용할 수 있습니다."

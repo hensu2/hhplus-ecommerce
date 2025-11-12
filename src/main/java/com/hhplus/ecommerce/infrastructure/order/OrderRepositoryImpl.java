@@ -4,20 +4,17 @@ import com.hhplus.ecommerce.domain.order.OrderEntity;
 import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 import com.hhplus.ecommerce.infrastructure.order.memory.OrderItemTable;
 import com.hhplus.ecommerce.infrastructure.order.memory.OrderTable;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 public class OrderRepositoryImpl implements OrderRepository {
 
     private final OrderTable orderTable;
     private final OrderItemTable orderItemTable;
-
-    public OrderRepositoryImpl(OrderTable orderTable, OrderItemTable orderItemTable) {
-        this.orderTable = orderTable;
-        this.orderItemTable = orderItemTable;
-    }
 
     @Override
     public OrderEntity save(OrderEntity order) {

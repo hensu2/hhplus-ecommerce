@@ -1,17 +1,11 @@
 package com.hhplus.ecommerce.presentation.payment.res;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class PaymentResponse {
-    private Long paymentId;
-    private Long orderId;
-    private Long userId;
-    private Integer amount;
-    private String status;
-    private String createdAt;
+public record PaymentResponse(
+    Long paymentId,
+    Long orderId,
+    Long userId,
+    Integer amount,
+    String status,
+    String createdAt
+) {
 }

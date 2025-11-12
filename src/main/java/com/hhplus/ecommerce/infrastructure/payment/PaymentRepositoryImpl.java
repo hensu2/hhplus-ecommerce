@@ -2,19 +2,17 @@ package com.hhplus.ecommerce.infrastructure.payment;
 
 import com.hhplus.ecommerce.domain.payment.PaymentEntity;
 import com.hhplus.ecommerce.infrastructure.payment.memory.PaymentTable;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 public class PaymentRepositoryImpl implements PaymentRepository {
 
     private final PaymentTable paymentTable;
-
-    public PaymentRepositoryImpl(PaymentTable paymentTable) {
-        this.paymentTable = paymentTable;
-    }
 
     @Override
     public PaymentEntity save(PaymentEntity payment) {

@@ -5,6 +5,7 @@ import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponStatus;
 import com.hhplus.ecommerce.infrastructure.coupon.CouponRepository;
 import com.hhplus.ecommerce.presentation.coupon.res.CouponResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -13,13 +14,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class GetMyCouponsUseCase {
 
     private final CouponRepository couponRepository;
-
-    public GetMyCouponsUseCase(CouponRepository couponRepository) {
-        this.couponRepository = couponRepository;
-    }
 
     public List<CouponResponse> execute(long userId, CouponStatus status) {
         List<CouponHistoryEntity> histories = couponRepository.findHistoriesByUserId(userId);

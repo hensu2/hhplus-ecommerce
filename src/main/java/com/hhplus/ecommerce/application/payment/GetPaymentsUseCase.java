@@ -3,6 +3,7 @@ package com.hhplus.ecommerce.application.payment;
 import com.hhplus.ecommerce.domain.payment.PaymentEntity;
 import com.hhplus.ecommerce.infrastructure.payment.PaymentRepository;
 import com.hhplus.ecommerce.presentation.payment.res.PaymentResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -11,13 +12,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class GetPaymentsUseCase {
 
     private final PaymentRepository paymentRepository;
-
-    public GetPaymentsUseCase(PaymentRepository paymentRepository) {
-        this.paymentRepository = paymentRepository;
-    }
 
     public List<PaymentResponse> execute(long userId) {
         List<PaymentEntity> payments = paymentRepository.findByUserId(userId);

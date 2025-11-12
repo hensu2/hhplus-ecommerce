@@ -10,28 +10,20 @@ import com.hhplus.ecommerce.infrastructure.product.ProductStatisticsRepository;
 import com.hhplus.ecommerce.infrastructure.product.memory.ProductStatisticsTable;
 import com.hhplus.ecommerce.presentation.product.res.ProductDetailResponse;
 import com.hhplus.ecommerce.presentation.product.res.ProductOptionResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class GetProductUseCase {
 
     private final ProductRepository productRepository;
     private final ProductOptionRepository productOptionRepository;
     private final ProductStatisticsRepository productStatisticsRepository;
     private final ProductStatisticsTable productStatisticsTable;
-
-    public GetProductUseCase(ProductRepository productRepository,
-                            ProductOptionRepository productOptionRepository,
-                            ProductStatisticsRepository productStatisticsRepository,
-                            ProductStatisticsTable productStatisticsTable) {
-        this.productRepository = productRepository;
-        this.productOptionRepository = productOptionRepository;
-        this.productStatisticsRepository = productStatisticsRepository;
-        this.productStatisticsTable = productStatisticsTable;
-    }
 
     public ProductDetailResponse execute(Long productId) {
         ProductEntity.validateProductId(productId);

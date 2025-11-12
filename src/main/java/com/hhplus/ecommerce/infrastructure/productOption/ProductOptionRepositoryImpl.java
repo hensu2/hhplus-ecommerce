@@ -2,19 +2,17 @@ package com.hhplus.ecommerce.infrastructure.productOption;
 
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.infrastructure.productOption.memory.ProductOptionTable;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 public class ProductOptionRepositoryImpl implements ProductOptionRepository {
 
     private final ProductOptionTable productOptionTable;
-
-    public ProductOptionRepositoryImpl(ProductOptionTable productOptionTable) {
-        this.productOptionTable = productOptionTable;
-    }
 
     @Override
     public List<ProductOptionEntity> findByProductId(Long productId) {
@@ -29,10 +27,5 @@ public class ProductOptionRepositoryImpl implements ProductOptionRepository {
     @Override
     public ProductOptionEntity save(ProductOptionEntity productOption) {
         return productOptionTable.save(productOption);
-    }
-
-    @Override
-    public ProductOptionEntity decreaseStock(Long optionId, long quantity) {
-        return productOptionTable.decreaseStock(optionId, quantity);
     }
 }

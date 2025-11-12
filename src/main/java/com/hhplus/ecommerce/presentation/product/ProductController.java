@@ -6,6 +6,7 @@ import com.hhplus.ecommerce.application.product.GetProductsUseCase;
 import com.hhplus.ecommerce.presentation.product.res.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,19 +16,12 @@ import java.util.List;
 @Tag(name = "상품 관리", description = "상품 조회 API")
 @RestController
 @RequestMapping("/api/products")
+@RequiredArgsConstructor
 public class ProductController {
 
     private final GetProductsUseCase getProductsUseCase;
     private final GetProductUseCase getProductUseCase;
     private final GetPopularProductsUseCase getPopularProductsUseCase;
-
-    public ProductController(GetProductsUseCase getProductsUseCase,
-                            GetProductUseCase getProductUseCase,
-                            GetPopularProductsUseCase getPopularProductsUseCase) {
-        this.getProductsUseCase = getProductsUseCase;
-        this.getProductUseCase = getProductUseCase;
-        this.getPopularProductsUseCase = getPopularProductsUseCase;
-    }
 
     // 상품 목록 조회 (GET /api/products)
     @Operation(summary = "상품 목록 조회", description = "상품 목록을 페이징하여 조회합니다.")

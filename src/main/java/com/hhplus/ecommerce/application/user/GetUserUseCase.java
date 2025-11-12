@@ -4,16 +4,14 @@ import com.hhplus.ecommerce.common.exception.UserNotFoundException;
 import com.hhplus.ecommerce.domain.user.UserEntity;
 import com.hhplus.ecommerce.infrastructure.user.UserRepository;
 import com.hhplus.ecommerce.presentation.user.res.UserResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class GetUserUseCase {
 
     private final UserRepository userRepository;
-
-    public GetUserUseCase(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     public UserResponse execute(Long userId) {
         UserEntity.validateUserId(userId);

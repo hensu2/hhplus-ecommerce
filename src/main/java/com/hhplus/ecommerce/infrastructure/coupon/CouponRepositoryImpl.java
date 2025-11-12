@@ -4,21 +4,18 @@ import com.hhplus.ecommerce.domain.coupon.CouponEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
 import com.hhplus.ecommerce.infrastructure.coupon.memory.CouponHistoryTable;
 import com.hhplus.ecommerce.infrastructure.coupon.memory.CouponTable;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 public class CouponRepositoryImpl implements CouponRepository {
 
     private final CouponTable couponTable;
     private final CouponHistoryTable couponHistoryTable;
-
-    public CouponRepositoryImpl(CouponTable couponTable, CouponHistoryTable couponHistoryTable) {
-        this.couponTable = couponTable;
-        this.couponHistoryTable = couponHistoryTable;
-    }
 
     @Override
     public List<CouponEntity> findAll() {
