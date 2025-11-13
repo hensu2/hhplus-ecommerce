@@ -44,6 +44,10 @@ public class ProductOptionEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     private ProductOptionEntity(Long id, ProductEntity product, String optionType, Long additionalPrice, Long stock) {
         this.id = id;
         this.product = product;

@@ -40,6 +40,10 @@ public class UserEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     private UserEntity(Long id, String username, Long point, String role) {
         this.id = id;
         this.username = username;
