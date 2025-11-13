@@ -3,9 +3,9 @@ package com.hhplus.ecommerce.application.cart;
 import com.hhplus.ecommerce.domain.cart.CartEntity;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
-import com.hhplus.ecommerce.infrastructure.cart.CartRepository;
-import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
-import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
+import com.hhplus.ecommerce.domain.cart.CartRepository;
+import com.hhplus.ecommerce.domain.product.ProductRepository;
+import com.hhplus.ecommerce.domain.productOption.ProductOptionRepository;
 import com.hhplus.ecommerce.presentation.cart.res.AddCartItemResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ public class AddToCartUseCase {
             .orElseThrow(() -> new IllegalArgumentException("상품 옵션을 찾을 수 없습니다."));
 
         // 2. 재고 확인
-        if (option.stock() < quantity) {
+        if (option.getStock() < quantity) {
             throw new IllegalArgumentException("재고가 부족합니다.");
         }
 
@@ -46,13 +46,14 @@ public class AddToCartUseCase {
         if (existingCart.isPresent()) {
             // 기존 장바구니 아이템의 수량 증가
             CartEntity existing = existingCart.get();
-            int newQuantity = existing.quantity() + quantity;
+            int newQuantity = existing.getQuantity() + quantity;
 
-            if (option.stock() < newQuantity) {
+            if (option.getStock() < newQuantity) {
                 throw new IllegalArgumentException("재고가 부족합니다.");
             }
 
-            savedCart = cartRepository.save(existing.updateQuantity(newQuantity));
+            existing.updateQuantity(newQuantity);
+            savedCart = cartRepository.save(existing);
         } else {
             // 새로운 장바구니 아이템 생성
             CartEntity newCart = CartEntity.create(userId, productId, productOptionId, quantity);
@@ -60,19 +61,19 @@ public class AddToCartUseCase {
         }
 
         // 4. 응답 생성
-        int unitPrice = (int) (product.price() + option.additionalPrice());
-        int totalPrice = unitPrice * savedCart.quantity();
+        int unitPrice = (int) (product.getPrice() + option.getAdditionalPrice());
+        int totalPrice = unitPrice * savedCart.getQuantity();
 
         return new AddCartItemResponse(
-            savedCart.id(),
-            product.id(),
-            product.productName(),
-            option.id(),
-            option.optionType(),
-            savedCart.quantity(),
+            savedCart.getId(),
+            product.getId(),
+            product.getProductName(),
+            option.getId(),
+            option.getOptionType(),
+            savedCart.getQuantity(),
             unitPrice,
             totalPrice,
-            FORMATTER.format(Instant.ofEpochMilli(savedCart.createdAt()))
+            FORMATTER.format(Instant.ofEpochMilli(savedCart.getCreatedAt()))
         );
     }
 }

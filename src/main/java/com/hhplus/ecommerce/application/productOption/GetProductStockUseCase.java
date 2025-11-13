@@ -2,12 +2,13 @@ package com.hhplus.ecommerce.application.productOption;
 
 import com.hhplus.ecommerce.common.exception.ProductNotFoundException;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
-import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
+import com.hhplus.ecommerce.domain.product.ProductRepository;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
-import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
+import com.hhplus.ecommerce.domain.productOption.ProductOptionRepository;
 import com.hhplus.ecommerce.presentation.productOption.res.ProductStockResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class GetProductStockUseCase {
     private final ProductRepository productRepository;
     private final ProductOptionRepository productOptionRepository;
 
+    @Transactional(readOnly = true)
     public ProductStockResponse execute(Long productId) {
         ProductEntity.validateProductId(productId);
 
@@ -26,6 +28,6 @@ public class GetProductStockUseCase {
 
         List<ProductOptionEntity> options = productOptionRepository.findByProductId(productId);
 
-        return product.toProductStockResponse(options);
+        return ProductStockResponse.from(product, options);
     }
 }

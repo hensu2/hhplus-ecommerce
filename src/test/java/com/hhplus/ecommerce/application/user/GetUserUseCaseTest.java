@@ -3,7 +3,7 @@ package com.hhplus.ecommerce.application.user;
 import com.hhplus.ecommerce.common.exception.InvalidInputException;
 import com.hhplus.ecommerce.common.exception.UserNotFoundException;
 import com.hhplus.ecommerce.domain.user.UserEntity;
-import com.hhplus.ecommerce.infrastructure.user.UserRepository;
+import com.hhplus.ecommerce.domain.user.UserRepository;
 import com.hhplus.ecommerce.presentation.user.res.UserResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,8 +33,7 @@ class GetUserUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        long timestamp = System.currentTimeMillis();
-        testUser = new UserEntity(1L, "testuser", 50000L, "USER", timestamp, timestamp);
+        testUser = UserEntity.create("testuser", 50000L, "USER");
     }
 
     @Test
@@ -49,10 +48,9 @@ class GetUserUseCaseTest {
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.getId()).isEqualTo(testUser.id());
-        assertThat(response.getUsername()).isEqualTo(testUser.username());
-        assertThat(response.getPoint()).isEqualTo(testUser.point());
-        assertThat(response.getRole()).isEqualTo(testUser.role());
+        assertThat(response.username()).isEqualTo(testUser.getUsername());
+        assertThat(response.point()).isEqualTo(testUser.getPoint());
+        assertThat(response.role()).isEqualTo(testUser.getRole());
         verify(userRepository).findById(userId);
     }
 

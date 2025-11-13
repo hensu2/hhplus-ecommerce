@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.infrastructure.cart;
 
 import com.hhplus.ecommerce.domain.cart.CartEntity;
-import com.hhplus.ecommerce.infrastructure.cart.memory.CartTable;
+import com.hhplus.ecommerce.domain.cart.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -12,35 +12,35 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CartRepositoryImpl implements CartRepository {
 
-    private final CartTable cartTable;
+    private final CartJpaRepository cartJpaRepository;
 
     @Override
     public CartEntity save(CartEntity cart) {
-        return cartTable.save(cart);
+        return cartJpaRepository.save(cart);
     }
 
     @Override
     public Optional<CartEntity> findById(Long id) {
-        return cartTable.findById(id);
+        return cartJpaRepository.findById(id);
     }
 
     @Override
     public List<CartEntity> findByUserId(Long userId) {
-        return cartTable.findByUserId(userId);
+        return cartJpaRepository.findByUserId(userId);
     }
 
     @Override
     public Optional<CartEntity> findByUserIdAndProductOptionId(Long userId, Long productOptionId) {
-        return cartTable.findByUserIdAndProductOptionId(userId, productOptionId);
+        return cartJpaRepository.findByUserIdAndProductOptionId(userId, productOptionId);
     }
 
     @Override
     public void delete(Long id) {
-        cartTable.delete(id);
+        cartJpaRepository.deleteById(id);
     }
 
     @Override
     public void deleteByUserId(Long userId) {
-        cartTable.deleteByUserId(userId);
+        cartJpaRepository.deleteByUserId(userId);
     }
 }

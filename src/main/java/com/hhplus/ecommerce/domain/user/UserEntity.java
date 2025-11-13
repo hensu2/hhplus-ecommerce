@@ -2,15 +2,54 @@ package com.hhplus.ecommerce.domain.user;
 
 import com.hhplus.ecommerce.common.exception.InvalidInputException;
 import com.hhplus.ecommerce.presentation.user.res.UserResponse;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-public record UserEntity(
-    long id,
-    String username,
-    long point,
-    String role,
-    long createdAt,
-    long updatedAt
-) {
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "USERS", indexes = {
+    @Index(name = "idx_username", columnList = "username")
+})
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class UserEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "username", nullable = false, length = 100)
+    private String username;
+
+    @Column(name = "point", nullable = false)
+    private Long point = 0L;
+
+    @Column(name = "role", nullable = false, length = 20)
+    private String role = "USER";
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
+
+    private UserEntity(Long id, String username, Long point, String role) {
+        this.id = id;
+        this.username = username;
+        this.point = point;
+        this.role = role;
+    }
 
     public static void validateUserId(Long userId) {
         if (userId == null) {
@@ -25,7 +64,7 @@ public record UserEntity(
         validateUsername(username);
         validatePoint(point);
         validateRole(role);
-        return new UserEntity(0L, username, point, role, 0L, 0L);
+        return new UserEntity(null, username, point, role);
     }
 
     private static void validateUsername(String username) {
@@ -47,6 +86,31 @@ public record UserEntity(
     }
 
     public UserResponse toUserResponse() {
-        return new UserResponse(id, username, point, role, createdAt, updatedAt);
+        // LocalDateTime을 timestamp로 변환
+        long createdAtTimestamp = createdAt != null ?
+            createdAt.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() : 0L;
+        long updatedAtTimestamp = updatedAt != null ?
+            updatedAt.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() : 0L;
+
+        return new UserResponse(id, username, point, role, createdAtTimestamp, updatedAtTimestamp);
+    }
+
+    // 포인트 충전
+    public void chargePoint(long amount) {
+        if (amount <= 0) {
+            throw new InvalidInputException("충전 금액은 0보다 커야 합니다.");
+        }
+        this.point += amount;
+    }
+
+    // 포인트 사용
+    public void usePoint(long amount) {
+        if (amount <= 0) {
+            throw new InvalidInputException("사용 금액은 0보다 커야 합니다.");
+        }
+        if (this.point < amount) {
+            throw new InvalidInputException("포인트가 부족합니다.");
+        }
+        this.point -= amount;
     }
 }

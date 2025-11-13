@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.application.payment;
 
 import com.hhplus.ecommerce.domain.payment.PaymentEntity;
-import com.hhplus.ecommerce.infrastructure.payment.PaymentRepository;
+import com.hhplus.ecommerce.domain.payment.PaymentRepository;
 import com.hhplus.ecommerce.presentation.payment.res.PaymentResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,12 +27,12 @@ public class GetPaymentsUseCase {
 
     private PaymentResponse toPaymentResponse(PaymentEntity payment) {
         return new PaymentResponse(
-            payment.id(),
-            payment.orderId(),
-            payment.userId(),
-            payment.amount(),
-            payment.status().name(),
-            formatTimestamp(payment.createdAt())
+            payment.getId(),
+            payment.getOrderId(),
+            payment.getUserId(),
+            payment.getAmount(),
+            payment.getStatus().name(),
+            formatTimestamp(payment.getCreatedAt())
         );
     }
 

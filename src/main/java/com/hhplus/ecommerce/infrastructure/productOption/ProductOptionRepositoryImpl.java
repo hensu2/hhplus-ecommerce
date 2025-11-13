@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.infrastructure.productOption;
 
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
-import com.hhplus.ecommerce.infrastructure.productOption.memory.ProductOptionTable;
+import com.hhplus.ecommerce.domain.productOption.ProductOptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -12,20 +12,20 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductOptionRepositoryImpl implements ProductOptionRepository {
 
-    private final ProductOptionTable productOptionTable;
+    private final ProductOptionJpaRepository productOptionJpaRepository;
 
     @Override
     public List<ProductOptionEntity> findByProductId(Long productId) {
-        return productOptionTable.findByProductId(productId);
+        return productOptionJpaRepository.findByProductId(productId);
     }
 
     @Override
     public Optional<ProductOptionEntity> findById(Long id) {
-        return Optional.ofNullable(productOptionTable.findById(id));
+        return productOptionJpaRepository.findById(id);
     }
 
     @Override
     public ProductOptionEntity save(ProductOptionEntity productOption) {
-        return productOptionTable.save(productOption);
+        return productOptionJpaRepository.save(productOption);
     }
 }

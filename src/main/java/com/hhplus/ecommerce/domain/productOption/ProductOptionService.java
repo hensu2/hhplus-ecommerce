@@ -1,6 +1,6 @@
 package com.hhplus.ecommerce.domain.productOption;
 
-import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
+import com.hhplus.ecommerce.domain.productOption.ProductOptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +14,7 @@ public class ProductOptionService {
         ProductOptionEntity option = productOptionRepository.findById(optionId)
             .orElseThrow(() -> new IllegalArgumentException("상품 옵션을 찾을 수 없습니다."));
 
-        ProductOptionEntity updatedOption = option.updateStock(StockUpdateType.DECREASE, quantity);
-        return productOptionRepository.save(updatedOption);
+        option.updateStock(StockUpdateType.DECREASE, (long) quantity);
+        return productOptionRepository.save(option);
     }
 }
