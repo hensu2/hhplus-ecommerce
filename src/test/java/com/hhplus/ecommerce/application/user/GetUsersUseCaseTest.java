@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.application.user;
 
 import com.hhplus.ecommerce.domain.user.UserEntity;
-import com.hhplus.ecommerce.infrastructure.user.UserRepository;
+import com.hhplus.ecommerce.domain.user.UserRepository;
 import com.hhplus.ecommerce.presentation.user.res.UserResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,11 +32,10 @@ class GetUsersUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        long timestamp = System.currentTimeMillis();
         testUsers = Arrays.asList(
-            new UserEntity(1L, "user1", 50000L, "USER", timestamp, timestamp),
-            new UserEntity(2L, "user2", 100000L, "ADMIN", timestamp, timestamp),
-            new UserEntity(3L, "user3", 30000L, "USER", timestamp, timestamp)
+            UserEntity.create("user1", 50000L, "USER"),
+            UserEntity.create("user2", 100000L, "ADMIN"),
+            UserEntity.create("user3", 30000L, "USER")
         );
     }
 
@@ -52,12 +51,9 @@ class GetUsersUseCaseTest {
         // then
         assertThat(responses).isNotNull();
         assertThat(responses).hasSize(3);
-        assertThat(responses.get(0).getId()).isEqualTo(1L);
-        assertThat(responses.get(0).getUsername()).isEqualTo("user1");
-        assertThat(responses.get(1).getId()).isEqualTo(2L);
-        assertThat(responses.get(1).getUsername()).isEqualTo("user2");
-        assertThat(responses.get(2).getId()).isEqualTo(3L);
-        assertThat(responses.get(2).getUsername()).isEqualTo("user3");
+        assertThat(responses.get(0).username()).isEqualTo("user1");
+        assertThat(responses.get(1).username()).isEqualTo("user2");
+        assertThat(responses.get(2).username()).isEqualTo("user3");
         verify(userRepository).findAll();
     }
 

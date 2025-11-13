@@ -55,19 +55,65 @@ class UserTest {
     @DisplayName("UserEntity를 UserResponse로 변환한다")
     void toUserResponse_Success() {
         // given
-        long timestamp = System.currentTimeMillis();
-        UserEntity user = new UserEntity(1L, "testuser", 50000L, "USER", timestamp, timestamp);
+        UserEntity user = UserEntity.create("testuser", 50000L, "USER");
 
         // when
         UserResponse response = user.toUserResponse();
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getUsername()).isEqualTo("testuser");
-        assertThat(response.getPoint()).isEqualTo(50000L);
-        assertThat(response.getRole()).isEqualTo("USER");
-        assertThat(response.getCreatedAt()).isEqualTo(timestamp);
-        assertThat(response.getUpdatedAt()).isEqualTo(timestamp);
+        assertThat(response.username()).isEqualTo("testuser");
+        assertThat(response.point()).isEqualTo(50000L);
+        assertThat(response.role()).isEqualTo("USER");
+    }
+
+    @Test
+    @DisplayName("포인트를 충전한다")
+    void chargePoint_Success() {
+        // given
+        UserEntity user = UserEntity.create("testuser", 50000L, "USER");
+
+        // when
+        user.chargePoint(10000L);
+
+        // then
+        assertThat(user.getPoint()).isEqualTo(60000L);
+    }
+
+    @Test
+    @DisplayName("0 이하의 금액으로 충전시 예외 발생")
+    void chargePoint_InvalidAmount_ThrowsException() {
+        // given
+        UserEntity user = UserEntity.create("testuser", 50000L, "USER");
+
+        // when & then
+        assertThatThrownBy(() -> user.chargePoint(0L))
+            .isInstanceOf(InvalidInputException.class)
+            .hasMessage("충전 금액은 0보다 커야 합니다.");
+    }
+
+    @Test
+    @DisplayName("포인트를 사용한다")
+    void usePoint_Success() {
+        // given
+        UserEntity user = UserEntity.create("testuser", 50000L, "USER");
+
+        // when
+        user.usePoint(10000L);
+
+        // then
+        assertThat(user.getPoint()).isEqualTo(40000L);
+    }
+
+    @Test
+    @DisplayName("보유 포인트보다 많이 사용시 예외 발생")
+    void usePoint_InsufficientPoint_ThrowsException() {
+        // given
+        UserEntity user = UserEntity.create("testuser", 50000L, "USER");
+
+        // when & then
+        assertThatThrownBy(() -> user.usePoint(60000L))
+            .isInstanceOf(InvalidInputException.class)
+            .hasMessage("포인트가 부족합니다.");
     }
 }
