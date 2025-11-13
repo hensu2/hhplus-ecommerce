@@ -1,6 +1,6 @@
 package com.hhplus.ecommerce.application.cart;
 
-import com.hhplus.ecommerce.infrastructure.cart.CartRepository;
+import com.hhplus.ecommerce.domain.cart.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

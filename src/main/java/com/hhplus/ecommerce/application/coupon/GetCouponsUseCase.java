@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.application.coupon;
 
 import com.hhplus.ecommerce.domain.coupon.CouponEntity;
-import com.hhplus.ecommerce.infrastructure.coupon.CouponRepository;
+import com.hhplus.ecommerce.domain.coupon.CouponRepository;
 import com.hhplus.ecommerce.presentation.coupon.res.CouponListResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

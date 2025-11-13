@@ -3,9 +3,9 @@ package com.hhplus.ecommerce.application.cart;
 import com.hhplus.ecommerce.domain.cart.CartEntity;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
-import com.hhplus.ecommerce.infrastructure.cart.CartRepository;
-import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
-import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
+import com.hhplus.ecommerce.domain.cart.CartRepository;
+import com.hhplus.ecommerce.domain.product.ProductRepository;
+import com.hhplus.ecommerce.domain.productOption.ProductOptionRepository;
 import com.hhplus.ecommerce.presentation.cart.res.CartItemResponse;
 import com.hhplus.ecommerce.presentation.cart.res.CartResponse;
 import lombok.RequiredArgsConstructor;
@@ -31,28 +31,29 @@ public class GetCartUseCase {
         int totalAmount = 0;
 
         for (CartEntity cart : carts) {
-            ProductEntity product = productRepository.findById(cart.productId())
+            ProductEntity product = productRepository.findById(cart.getProductId())
                 .orElse(null);
-            ProductOptionEntity option = productOptionRepository.findById(cart.productOptionId())
+            ProductOptionEntity option = productOptionRepository.findById(cart.getProductOptionId())
                 .orElse(null);
 
             if (product == null || option == null) {
                 continue; // 상품이나 옵션이 삭제된 경우 건너뛰기
             }
 
-            int unitPrice = (int) (product.price() + option.additionalPrice());
-            int itemTotalPrice = unitPrice * cart.quantity();
+            long unitPriceLong = product.getPrice() + option.getAdditionalPrice();
+            int unitPrice = (int) unitPriceLong;
+            int itemTotalPrice = unitPrice * cart.getQuantity();
 
             items.add(new CartItemResponse(
-                cart.id(),
-                product.id(),
-                product.productName(),
-                option.id(),
-                option.optionType(),
-                cart.quantity(),
+                cart.getId(),
+                product.getId(),
+                product.getProductName(),
+                option.getId(),
+                option.getOptionType(),
+                cart.getQuantity(),
                 unitPrice,
                 itemTotalPrice,
-                (int) option.stock()
+                option.getStock().intValue()
             ));
 
             totalAmount += itemTotalPrice;

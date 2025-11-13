@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "장바구니", description = "장바구니 관리 API")
 @RestController
-@RequestMapping("/api/cart")
+@RequestMapping("/api/users/{userId}/cart")
 @RequiredArgsConstructor
 public class CartController {
 
@@ -25,22 +25,21 @@ public class CartController {
     private final UpdateCartItemUseCase updateCartItemUseCase;
     private final DeleteCartItemUseCase deleteCartItemUseCase;
 
-    // 임시로 사용자 ID를 1L로 고정 (실제로는 인증 정보에서 가져와야 함)
-    private static final Long CURRENT_USER_ID = 1L;
-
-    // 장바구니 조회 (GET /api/cart)
+    // 장바구니 조회 (GET /api/users/{userId}/cart)
     @Operation(summary = "장바구니 조회", description = "현재 사용자의 장바구니 목록을 조회합니다.")
     @GetMapping
-    public CartResponse getCart() {
-        return getCartUseCase.execute(CURRENT_USER_ID);
+    public CartResponse getCart(@PathVariable Long userId) {
+        return getCartUseCase.execute(userId);
     }
 
-    // 장바구니 추가 (POST /api/cart)
+    // 장바구니 추가 (POST /api/users/{userId}/cart)
     @Operation(summary = "장바구니 추가", description = "상품을 장바구니에 추가합니다. 재고를 확인합니다.")
     @PostMapping
-    public ResponseEntity<AddCartItemResponse> addToCart(@RequestBody AddToCartRequest request) {
+    public ResponseEntity<AddCartItemResponse> addToCart(
+            @PathVariable Long userId,
+            @RequestBody AddToCartRequest request) {
         AddCartItemResponse response = addToCartUseCase.execute(
-            CURRENT_USER_ID,
+            userId,
             request.productId(),
             request.optionId(),
             request.quantity()
@@ -48,21 +47,24 @@ public class CartController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // 장바구니 수량 변경 (PUT /api/cart/{id})
+    // 장바구니 수량 변경 (PUT /api/users/{userId}/cart/{cartItemId})
     @Operation(summary = "장바구니 수량 변경", description = "장바구니 아이템의 수량을 변경합니다.")
-    @PutMapping("/{id}")
+    @PutMapping("/{cartItemId}")
     public ResponseEntity<UpdateCartItemResponse> updateCartItem(
-            @PathVariable Long id,
+            @PathVariable Long userId,
+            @PathVariable Long cartItemId,
             @RequestBody UpdateCartItemRequest request) {
-        UpdateCartItemResponse response = updateCartItemUseCase.execute(id, request.quantity());
+        UpdateCartItemResponse response = updateCartItemUseCase.execute(cartItemId, request.quantity());
         return ResponseEntity.ok(response);
     }
 
-    // 장바구니 삭제 (DELETE /api/cart/{id})
+    // 장바구니 삭제 (DELETE /api/users/{userId}/cart/{cartItemId})
     @Operation(summary = "장바구니 삭제", description = "장바구니에서 특정 아이템을 삭제합니다.")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{cartItemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCartItem(@PathVariable Long id) {
-        deleteCartItemUseCase.execute(id);
+    public void deleteCartItem(
+            @PathVariable Long userId,
+            @PathVariable Long cartItemId) {
+        deleteCartItemUseCase.execute(cartItemId);
     }
 }

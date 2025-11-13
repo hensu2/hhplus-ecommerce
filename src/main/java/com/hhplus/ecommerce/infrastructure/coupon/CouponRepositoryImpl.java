@@ -1,11 +1,12 @@
 package com.hhplus.ecommerce.infrastructure.coupon;
 
+import com.hhplus.ecommerce.common.exception.CouponNotFoundException;
 import com.hhplus.ecommerce.domain.coupon.CouponEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
-import com.hhplus.ecommerce.infrastructure.coupon.memory.CouponHistoryTable;
-import com.hhplus.ecommerce.infrastructure.coupon.memory.CouponTable;
+import com.hhplus.ecommerce.domain.coupon.CouponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,41 +15,50 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CouponRepositoryImpl implements CouponRepository {
 
-    private final CouponTable couponTable;
-    private final CouponHistoryTable couponHistoryTable;
+    private final CouponJpaRepository couponJpaRepository;
+    private final CouponHistoryJpaRepository couponHistoryJpaRepository;
 
     @Override
     public List<CouponEntity> findAll() {
-        return couponTable.findAll();
+        return couponJpaRepository.findAll();
     }
 
     @Override
     public Optional<CouponEntity> findById(long couponId) {
-        return couponTable.findById(couponId);
+        return couponJpaRepository.findById(couponId);
     }
 
     @Override
     public CouponEntity save(CouponEntity coupon) {
-        return couponTable.save(coupon);
+        return couponJpaRepository.save(coupon);
     }
 
     @Override
     public CouponHistoryEntity saveHistory(CouponHistoryEntity history) {
-        return couponHistoryTable.save(history);
+        return couponHistoryJpaRepository.save(history);
+    }
+
+    @Override
+    public Optional<CouponHistoryEntity> findHistoryById(long couponHistoryId) {
+        return couponHistoryJpaRepository.findById(couponHistoryId);
     }
 
     @Override
     public Optional<CouponHistoryEntity> findHistoryByUserIdAndCouponId(long userId, long couponId) {
-        return couponHistoryTable.findByUserIdAndCouponId(userId, couponId);
+        return couponHistoryJpaRepository.findByUserIdAndCouponId(userId, couponId);
     }
 
     @Override
     public List<CouponHistoryEntity> findHistoriesByUserId(long userId) {
-        return couponHistoryTable.findByUserId(userId);
+        return couponHistoryJpaRepository.findByUserId(userId);
     }
 
     @Override
+    @Transactional
     public CouponEntity decreaseStock(long couponId) {
-        return couponTable.decreaseStock(couponId);
+        CouponEntity coupon = couponJpaRepository.findById(couponId)
+            .orElseThrow(() -> new CouponNotFoundException("쿠폰을 찾을 수 없습니다."));
+        coupon.decreaseStock();
+        return couponJpaRepository.save(coupon);
     }
 }

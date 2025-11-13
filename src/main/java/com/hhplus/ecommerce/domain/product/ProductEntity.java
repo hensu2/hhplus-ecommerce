@@ -1,27 +1,58 @@
 package com.hhplus.ecommerce.domain.product;
 
 import com.hhplus.ecommerce.common.exception.InvalidInputException;
-import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
-import com.hhplus.ecommerce.presentation.product.res.ProductResponse;
-import com.hhplus.ecommerce.presentation.productOption.res.ProductStockResponse;
-import com.hhplus.ecommerce.presentation.productOption.res.StockOptionResponse;
+import com.hhplus.ecommerce.domain.user.UserEntity;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.stream.Collectors;
 
-public record ProductEntity(
-    long id,
-    long createdUserId,
-    String productName,
-    String content,
-    long price,
-    long createdAt,
-    long updatedAt
-) {
+@Entity
+@Table(name = "PRODUCT", indexes = {
+    @Index(name = "idx_created_user_id", columnList = "created_user_id"),
+    @Index(name = "idx_product_name", columnList = "product_name")
+})
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class ProductEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_product_user"))
+    private UserEntity createdUser;
+
+    @Column(name = "product_name", nullable = false, length = 255)
+    private String productName;
+
+    @Column(name = "content", columnDefinition = "TEXT")
+    private String content;
+
+    @Column(name = "price", nullable = false)
+    private Long price;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    private ProductEntity(Long id, UserEntity createdUser, String productName, String content, Long price) {
+        this.id = id;
+        this.createdUser = createdUser;
+        this.productName = productName;
+        this.content = content;
+        this.price = price;
+    }
+
     public static void validateProductId(Long productId) {
         if (productId == null) {
             throw new InvalidInputException("Product ID cannot be null");
@@ -31,22 +62,61 @@ public record ProductEntity(
         }
     }
 
-    public String getFormattedCreatedAt() {
-        return LocalDateTime.ofInstant(
-            Instant.ofEpochMilli(createdAt),
-            ZoneId.systemDefault()
-        ).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+    /**
+     * 상품 생성
+     */
+    public static ProductEntity create(UserEntity createdUser, String productName, String content, Long price) {
+        validateCreatedUser(createdUser);
+        validateProductName(productName);
+        validatePrice(price);
+        return new ProductEntity(null, createdUser, productName, content, price);
     }
 
-    public ProductResponse toProductResponse() {
-        return new ProductResponse(id, productName, content, (int) price, getFormattedCreatedAt());
+    /**
+     * 테스트용 팩토리 메서드 - ID 포함
+     */
+    public static ProductEntity createForTest(Long id, UserEntity createdUser, String productName, String content, Long price) {
+        validateCreatedUser(createdUser);
+        validateProductName(productName);
+        validatePrice(price);
+        return new ProductEntity(id, createdUser, productName, content, price);
     }
 
-    public ProductStockResponse toProductStockResponse(List<ProductOptionEntity> options) {
-        List<StockOptionResponse> stockOptions = options.stream()
-            .map(ProductOptionEntity::toStockOptionResponse)
-            .collect(Collectors.toList());
+    /**
+     * 상품 정보 수정
+     */
+    public void update(String productName, String content, Long price) {
+        if (productName != null && !productName.trim().isEmpty()) {
+            validateProductName(productName);
+            this.productName = productName;
+        }
+        if (content != null) {
+            this.content = content;
+        }
+        if (price != null) {
+            validatePrice(price);
+            this.price = price;
+        }
+    }
 
-        return new ProductStockResponse(id, productName, stockOptions);
+    private static void validateCreatedUser(UserEntity user) {
+        if (user == null) {
+            throw new IllegalArgumentException("상품 등록자 정보는 필수입니다.");
+        }
+    }
+
+    private static void validateProductName(String productName) {
+        if (productName == null || productName.trim().isEmpty()) {
+            throw new IllegalArgumentException("상품명은 필수입니다.");
+        }
+        if (productName.length() > 255) {
+            throw new IllegalArgumentException("상품명은 255자를 초과할 수 없습니다.");
+        }
+    }
+
+    private static void validatePrice(Long price) {
+        if (price == null || price < 0) {
+            throw new IllegalArgumentException("상품 가격은 0 이상이어야 합니다.");
+        }
     }
 }

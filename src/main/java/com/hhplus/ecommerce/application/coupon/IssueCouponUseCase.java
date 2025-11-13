@@ -2,8 +2,7 @@ package com.hhplus.ecommerce.application.coupon;
 
 import com.hhplus.ecommerce.domain.coupon.CouponEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
-import com.hhplus.ecommerce.domain.coupon.CouponStatus;
-import com.hhplus.ecommerce.infrastructure.coupon.CouponRepository;
+import com.hhplus.ecommerce.domain.coupon.CouponRepository;
 import com.hhplus.ecommerce.presentation.coupon.res.IssueCouponResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,15 +28,7 @@ public class IssueCouponUseCase {
         CouponEntity updatedCoupon = couponRepository.decreaseStock(couponId);
 
         // 4. 발급 히스토리 저장
-        long now = System.currentTimeMillis();
-        CouponHistoryEntity history = new CouponHistoryEntity(
-            0L,
-            userId,
-            couponId,
-            CouponStatus.ISSUED,
-            now,
-            null
-        );
+        CouponHistoryEntity history = CouponHistoryEntity.create(userId, couponId);
         CouponHistoryEntity savedHistory = couponRepository.saveHistory(history);
 
         // 5. 응답 생성

@@ -3,7 +3,7 @@ package com.hhplus.ecommerce.application.coupon;
 import com.hhplus.ecommerce.domain.coupon.CouponEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponStatus;
-import com.hhplus.ecommerce.infrastructure.coupon.CouponRepository;
+import com.hhplus.ecommerce.domain.coupon.CouponRepository;
 import com.hhplus.ecommerce.presentation.coupon.res.CouponResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,9 +23,9 @@ public class GetMyCouponsUseCase {
         List<CouponHistoryEntity> histories = couponRepository.findHistoriesByUserId(userId);
 
         return histories.stream()
-            .filter(history -> status == null || history.status() == status)
+            .filter(history -> status == null || history.getStatus() == status)
             .map(history -> {
-                CouponEntity coupon = couponRepository.findById(history.couponId())
+                CouponEntity coupon = couponRepository.findById(history.getCouponId())
                     .orElseThrow(() -> new IllegalStateException("쿠폰 정보를 찾을 수 없습니다."));
                 return toCouponResponse(history, coupon);
             })
@@ -34,18 +34,18 @@ public class GetMyCouponsUseCase {
 
     private CouponResponse toCouponResponse(CouponHistoryEntity history, CouponEntity coupon) {
         return new CouponResponse(
-            history.id(),
-            history.couponId(),
-            coupon.couponName(),
-            coupon.discountType().name(),
-            coupon.discountAmount(),
-            coupon.useMinAmount(),
-            coupon.useMaxAmount(),
-            formatTimestamp(coupon.validFrom()),
-            formatTimestamp(coupon.validUntil()),
-            history.status().name(),
-            formatTimestamp(history.issuedAt()),
-            history.usedAt() != null ? formatTimestamp(history.usedAt()) : null
+            history.getId(),
+            history.getCouponId(),
+            coupon.getCouponName(),
+            coupon.getDiscountType().name(),
+            coupon.getDiscountAmount(),
+            coupon.getUseMinAmount(),
+            coupon.getUseMaxAmount(),
+            formatTimestamp(coupon.getValidFrom()),
+            formatTimestamp(coupon.getValidUntil()),
+            history.getStatus().name(),
+            formatTimestamp(history.getIssuedAt()),
+            history.getUsedAt() != null ? formatTimestamp(history.getUsedAt()) : null
         );
     }
 

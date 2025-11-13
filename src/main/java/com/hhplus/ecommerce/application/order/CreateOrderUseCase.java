@@ -2,11 +2,10 @@ package com.hhplus.ecommerce.application.order;
 
 import com.hhplus.ecommerce.domain.order.OrderEntity;
 import com.hhplus.ecommerce.domain.order.OrderItemEntity;
-import com.hhplus.ecommerce.domain.order.OrderStatus;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionService;
-import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
-import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
+import com.hhplus.ecommerce.domain.order.OrderRepository;
+import com.hhplus.ecommerce.domain.productOption.ProductOptionRepository;
 import com.hhplus.ecommerce.presentation.order.req.CreateOrderRequest;
 import com.hhplus.ecommerce.presentation.order.req.OrderItemRequest;
 import com.hhplus.ecommerce.presentation.order.res.OrderItemResponse;
@@ -28,8 +27,6 @@ public class CreateOrderUseCase {
     private final ProductOptionService productOptionService;
 
     public OrderResponse execute(CreateOrderRequest request) {
-        long now = System.currentTimeMillis();
-
         List<OrderItemEntity> orderItems = new ArrayList<>();
         int totalAmount = 0;
 
@@ -42,72 +39,65 @@ public class CreateOrderUseCase {
                 item.quantity()
             );
 
-            int itemPrice = (int) (option.additionalPrice() * item.quantity());
+            int itemPrice = (int) (option.getAdditionalPrice() * item.quantity());
             totalAmount += itemPrice;
 
-            orderItems.add(new OrderItemEntity(
+            orderItems.add(OrderItemEntity.create(
                 0L,
-                0L,
-                option.productId(),
-                option.id(),
+                option.getProduct().getId(),
+                option.getId(),
                 "상품명",
-                option.optionType(),
+                option.getOptionType(),
                 item.quantity(),
-                itemPrice,
-                now
+                itemPrice
             ));
         }
 
         int discountAmount = 0;
         int finalAmount = totalAmount - discountAmount;
 
-        OrderEntity order = new OrderEntity(
-            0L,
+        OrderEntity order = OrderEntity.create(
             request.userId(),
             totalAmount,
             discountAmount,
             finalAmount,
-            request.couponHistoryId(),
-            OrderStatus.COMPLETED,
-            now,
-            now
+            request.couponHistoryId()
         );
+        order.complete();
         OrderEntity savedOrder = orderRepository.save(order);
 
         List<OrderItemResponse> itemResponses = new ArrayList<>();
         for (OrderItemEntity orderItem : orderItems) {
-            OrderItemEntity itemWithOrderId = new OrderItemEntity(
-                orderItem.id(),
-                savedOrder.id(),
-                orderItem.productId(),
-                orderItem.productOptionId(),
-                orderItem.productName(),
-                orderItem.optionType(),
-                orderItem.quantity(),
-                orderItem.price(),
-                orderItem.createdAt()
+            OrderItemEntity itemWithOrderId = OrderItemEntity.create(
+                savedOrder.getId(),
+                orderItem.getProductId(),
+                orderItem.getProductOptionId(),
+                orderItem.getProductName(),
+                orderItem.getOptionType(),
+                orderItem.getQuantity(),
+                orderItem.getPrice()
             );
             OrderItemEntity savedItem = orderRepository.saveItem(itemWithOrderId);
 
             itemResponses.add(new OrderItemResponse(
-                savedItem.productId(),
-                savedItem.productOptionId(),
-                savedItem.productName(),
-                savedItem.optionType(),
-                savedItem.quantity(),
-                savedItem.price()
+                savedItem.getProductId(),
+                savedItem.getProductOptionId(),
+                savedItem.getProductName(),
+                savedItem.getOptionType(),
+                savedItem.getQuantity(),
+                savedItem.getPrice()
             ));
         }
 
         return new OrderResponse(
-            savedOrder.id(),
-            savedOrder.userId(),
-            savedOrder.totalAmount(),
-            savedOrder.discountAmount(),
-            savedOrder.finalAmount(),
-            savedOrder.status().name(),
+            savedOrder.getId(),
+            savedOrder.getUserId(),
+            savedOrder.getTotalAmount(),
+            savedOrder.getDiscountAmount(),
+            savedOrder.getFinalAmount(),
+            savedOrder.getStatus().name(),
             itemResponses,
-            formatTimestamp(savedOrder.createdAt())
+            formatTimestamp(savedOrder.getCreatedAt())
         );
     }
 
