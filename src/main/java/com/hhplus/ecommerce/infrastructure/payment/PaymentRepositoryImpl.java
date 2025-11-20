@@ -28,4 +28,9 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     public List<PaymentEntity> findByUserId(long userId) {
         return paymentJpaRepository.findByUserId(userId);
     }
+
+    @Override
+    public List<PaymentEntity> findByOrderId(long orderId) {
+        return paymentJpaRepository.findAllByOrderId(orderId);
+    }
 }

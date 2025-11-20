@@ -9,6 +9,7 @@ public interface PaymentRepository {
     PaymentEntity save(PaymentEntity payment);
     Optional<PaymentEntity> findById(long paymentId);
     List<PaymentEntity> findByUserId(long userId);
+    List<PaymentEntity> findByOrderId(long orderId);
 
     default PaymentEntity getOrThrow(long paymentId) {
         return findById(paymentId)
