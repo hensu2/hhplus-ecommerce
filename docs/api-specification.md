@@ -582,8 +582,7 @@ Authorization: Bearer {token}
       "validFrom": "2024-10-30T00:00:00",
       "validUntil": "2024-11-30T23:59:59",
       "status": "ISSUED",
-      "issuedAt": "2024-10-30T00:00:00",
-      "usedAt": null
+      "issuedAt": "2024-10-30T00:00:00"
     },
     {
       "id": 2,
@@ -688,14 +687,11 @@ Authorization: Bearer {token}
       "optionId": 1,
       "optionType": "색상:블랙",
       "quantity": 2,
-      "unitPrice": 10000,
-      "totalPrice": 20000
+      "unitPrice": 10000
     }
   ],
-  "totalAmount": 50000,
   "discountAmount": 5000,
   "pointDiscount": 5000,
-  "finalAmount": 40000,
   "orderedAt": "2024-10-30T00:00:00"
 }
 ```
@@ -746,7 +742,7 @@ Authorization: Bearer {token}
 |-----------|------|----------|-------------|
 | page | Integer | No | 페이지 번호 (default: 0) |
 | size | Integer | No | 페이지 크기 (default: 20) |
-| status | String | No | 주문 상태 (PENDING, PAID, CANCELLED) |
+| status | String | No | 주문 상태 (PENDING, CONFIRMED, CANCELLED) |
 
 **Response (200 OK):**
 ```json
@@ -754,9 +750,9 @@ Authorization: Bearer {token}
   "content": [
     {
       "orderId": 1,
-      "status": "PAID",
-      "totalAmount": 50000,
-      "finalAmount": 40000,
+      "status": "CONFIRMED",
+      "discountAmount": 5000,
+      "pointDiscount": 5000,
       "itemCount": 3,
       "orderedAt": "2024-10-30T00:00:00"
     }
@@ -789,7 +785,7 @@ Authorization: Bearer {token}
 {
   "orderId": 1,
   "userId": 1,
-  "status": "PAID",
+  "status": "CONFIRMED",
   "items": [
     {
       "productId": 1,
@@ -797,14 +793,11 @@ Authorization: Bearer {token}
       "optionId": 1,
       "optionType": "색상:블랙",
       "quantity": 2,
-      "unitPrice": 10000,
-      "totalPrice": 20000
+      "unitPrice": 10000
     }
   ],
-  "totalAmount": 50000,
   "discountAmount": 5000,
   "pointDiscount": 5000,
-  "finalAmount": 40000,
   "coupon": {
     "couponName": "신규 회원 10% 할인 쿠폰",
     "discountAmount": 5000
@@ -812,6 +805,7 @@ Authorization: Bearer {token}
   "payment": {
     "paymentId": 1,
     "paymentAmount": 40000,
+    "status": "COMPLETED",
     "paidAt": "2024-10-30T00:00:10"
   },
   "orderedAt": "2024-10-30T00:00:00"
@@ -866,7 +860,7 @@ Authorization: Bearer {token}
 ```json
 {
   "error": "INVALID_STATUS",
-  "message": "이미 결제 완료된 주문은 취소할 수 없습니다."
+  "message": "이미 처리 완료된 주문은 취소할 수 없습니다."
 }
 ```
 
@@ -900,7 +894,7 @@ Authorization: Bearer {token}
   "userId": 1,
   "paymentAmount": 40000,
   "paymentMethod": "POINT",
-  "status": "SUCCESS",
+  "status": "COMPLETED",
   "paidAt": "2024-10-30T00:00:00",
   "earnedPoint": 400
 }
@@ -949,8 +943,9 @@ Authorization: Bearer {token}
   "userId": 1,
   "paymentAmount": 40000,
   "paymentMethod": "POINT",
-  "status": "SUCCESS",
-  "paidAt": "2024-10-30T00:00:00"
+  "status": "COMPLETED",
+  "paidAt": "2024-10-30T00:00:00",
+  "earnedPoint": 400
 }
 ```
 
@@ -1057,10 +1052,16 @@ Authorization: Bearer {token}
 ---
 
 **작성일:** 2024-10-30
-**최종 수정일:** 2025-11-06
-**버전:** 1.2
+**최종 수정일:** 2025-11-16
+**버전:** 1.3
 
 **변경 이력:**
+- v1.3 (2025-11-16): data-models.md v1.2 필드 변경사항 반영
+  - 주문/주문상세 응답에서 계산 가능한 필드 제거 (totalAmount, finalAmount, totalPrice)
+  - 주문 상태값 변경: PAID → CONFIRMED (data-models.md 기준)
+  - 결제 상태값 확장: SUCCESS/FAILED → PENDING/COMPLETED/FAILED/REFUNDED
+  - COUPON_HISTORY.used_at 필드 반영
+  - 주문/결제 프로세스 업데이트
 - v1.2 (2025-11-06): 사용자 관리 API 추가
   - 사용자 조회 API (GET /api/users/{id})
   - 사용자 목록 조회 API (GET /api/users)

@@ -15,14 +15,14 @@ public class CouponHistoryTable {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     public CouponHistoryEntity save(CouponHistoryEntity history) {
-        long id = history.id() == 0 ? idGenerator.getAndIncrement() : history.id();
+        long id = (history.getId() == null || history.getId() == 0L) ? idGenerator.getAndIncrement() : history.getId();
         CouponHistoryEntity newHistory = new CouponHistoryEntity(
             id,
-            history.userId(),
-            history.couponId(),
-            history.status(),
-            history.issuedAt(),
-            history.usedAt()
+            history.getUserId(),
+            history.getCouponId(),
+            history.getStatus(),
+            history.getIssuedAt(),
+            history.getUsedAt()
         );
         table.put(id, newHistory);
         return newHistory;
@@ -30,13 +30,13 @@ public class CouponHistoryTable {
 
     public Optional<CouponHistoryEntity> findByUserIdAndCouponId(long userId, long couponId) {
         return table.values().stream()
-            .filter(h -> h.userId() == userId && h.couponId() == couponId)
+            .filter(h -> h.getUserId() == userId && h.getCouponId() == couponId)
             .findFirst();
     }
 
     public List<CouponHistoryEntity> findByUserId(long userId) {
         return table.values().stream()
-            .filter(h -> h.userId() == userId)
+            .filter(h -> h.getUserId() == userId)
             .collect(Collectors.toList());
     }
 }

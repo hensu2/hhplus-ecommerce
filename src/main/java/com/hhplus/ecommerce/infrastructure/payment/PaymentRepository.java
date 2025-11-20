@@ -9,4 +9,9 @@ public interface PaymentRepository {
     PaymentEntity save(PaymentEntity payment);
     Optional<PaymentEntity> findById(long paymentId);
     List<PaymentEntity> findByUserId(long userId);
+
+    default PaymentEntity getOrThrow(long paymentId) {
+        return findById(paymentId)
+            .orElseThrow(() -> new IllegalArgumentException("결제 정보를 찾을 수 없습니다."));
+    }
 }

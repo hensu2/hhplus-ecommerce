@@ -19,29 +19,29 @@ Table USERS {
 
 Table POINT_HISTORY {
   id integer [primary key]
-  user_id integer
+  user_id integer [ref: > USERS.id]
   amount integer
-  Transaction_type varchar
+  transaction_type varchar
   description varchar
   created_at timestamp
   updated_at timestamp
 }
 
-Table PRODECT {
+Table PRODUCT {
   id integer [primary key]
-  created_userid integer
-  productName varchar
+  created_user_id integer [ref: > USERS.id]
+  product_name varchar
   content varchar
   price integer
   created_at timestamp
   updated_at timestamp
 }
 
-Table prodectOption{
+Table PRODUCT_OPTIONS {
   id integer [primary key]
-  product_id integer
+  product_id integer [ref: > PRODUCT.id]
   option_type varchar
-  additional_price varchar
+  additional_price integer
   stock integer
   created_at timestamp
   updated_at timestamp
@@ -50,31 +50,32 @@ Table prodectOption{
 Table COUPONS {
   id integer [primary key]
   coupon_name varchar
-  discount_type varchar // 퍼센트, 원
-  discount_amount varchar
+  discount_type varchar // PERCENTAGE, FIXED
+  discount_amount integer
   use_min_amount integer
   use_max_amount integer
-  stock integer //쿠폰 잔여량
+  stock integer
   valid_from timestamp
   valid_until timestamp
   created_at timestamp
   updated_at timestamp
 }
 
-Table COUPONS_HISTORY {
+Table COUPON_HISTORY {
   id integer [primary key]
-  coupons_id integer
-  user_id integer
-  status varchar
+  coupon_id integer [ref: > COUPONS.id]
+  user_id integer [ref: > USERS.id]
+  status varchar // ISSUED, USED, EXPIRED
+  used_at timestamp
   created_at timestamp
   updated_at timestamp
 }
 
 Table CART {
   id integer [primary key]
-  user_id integer
-  prodect_id integer
-  prodect_option_id integer
+  user_id integer [ref: > USERS.id]
+  product_id integer [ref: > PRODUCT.id]
+  product_option_id integer [ref: > PRODUCT_OPTIONS.id]
   quantity integer
   created_at timestamp
   updated_at timestamp
@@ -82,37 +83,38 @@ Table CART {
 
 Table ORDERS {
   id integer [primary key]
-  user_id integer
-  status varchar
-  coupons_history_id integer
-  total_amount integer
-  discount_amount integer
-  point_discount integer
-  final_amount integer
+  user_id integer [ref: > USERS.id]
+  status varchar // PENDING, CONFIRMED, CANCELLED
+  coupon_history_id integer [ref: > COUPON_HISTORY.id]
+  discount_amount integer // 쿠폰 할인액
+  point_discount integer // 포인트 사용액
   cancel_reason varchar
   ordered_at timestamp
   created_at timestamp
   updated_at timestamp
+
+  // total_amount와 final_amount는 제거 (계산 가능)
 }
 
 Table ORDER_ITEMS {
   id integer [primary key]
-  order_id integer
-  product_id integer
-  prodect_option_id varchar
+  order_id integer [ref: > ORDERS.id]
+  product_id integer [ref: > PRODUCT.id]
+  product_option_id integer [ref: > PRODUCT_OPTIONS.id]
   quantity integer
-  unit_price integer
-  total_price integer
+  unit_price integer // 주문 당시의 가격 (이력 보존)
   created_at timestamp
+
+  // total_price는 제거 (quantity * unit_price로 계산)
 }
 
 Table PAYMENTS {
   id integer [primary key]
-  order_id integer [unique]
-  user_id integer
+  order_id integer [unique, ref: - ORDERS.id]
+  user_id integer [ref: > USERS.id]
   payment_amount integer
   payment_method varchar
-  status varchar
+  status varchar // PENDING, COMPLETED, FAILED, REFUNDED
   earned_point integer
   paid_at timestamp
   created_at timestamp
@@ -121,7 +123,7 @@ Table PAYMENTS {
 
 Table EXTERNAL_SYNC_LOG {
   id integer [primary key]
-  order_id integer
+  order_id integer [ref: > ORDERS.id]
   status varchar // SUCCESS, FAILED, FAILED_PERMANENT
   retry_count integer
   error_message text
@@ -132,42 +134,15 @@ Table EXTERNAL_SYNC_LOG {
 
 Table PRODUCT_STATISTICS {
   id integer [primary key]
-  product_id integer
+  product_id integer [ref: > PRODUCT.id]
   sales_count integer
-  total_sales_amount integer
   period_start timestamp
   period_end timestamp
   created_at timestamp
   updated_at timestamp
+
+  // total_sales_amount는 제거 (집계 쿼리로 계산)
 }
-
-// USERS 관계
-Ref: POINT_HISTORY.user_id > USERS.id
-Ref: PRODECT.created_userid > USERS.id
-Ref: COUPONS_HISTORY.user_id > USERS.id
-Ref: CART.user_id > USERS.id
-Ref: ORDERS.user_id > USERS.id
-Ref: PAYMENTS.user_id > USERS.id
-
-// PRODECT 관계
-Ref: prodectOption.product_id > PRODECT.id
-Ref: CART.prodect_id > PRODECT.id
-Ref: ORDER_ITEMS.product_id > PRODECT.id
-Ref: PRODUCT_STATISTICS.product_id > PRODECT.id
-
-// prodectOption 관계
-Ref: CART.prodect_option_id > prodectOption.id
-Ref: ORDER_ITEMS.prodect_option_id > prodectOption.id
-
-// COUPONS_HISTORY 관계
-Ref: ORDERS.coupons_history_id > COUPONS_HISTORY.id
-
-// ORDERS 관계
-Ref: ORDER_ITEMS.order_id > ORDERS.id
-Ref: PAYMENTS.order_id - ORDERS.id // 1:1 관계
-Ref: EXTERNAL_SYNC_LOG.order_id > ORDERS.id
-
-Ref: COUPONS.id < COUPONS_HISTORY.coupons_id
 ```
 
 ---
@@ -560,11 +535,11 @@ CREATE INDEX idx_order_items_created ON ORDER_ITEMS(created_at, product_id);
 
 **변경 이력:**
 - v1.2 (2025-11-03): API 스펙 기준 업데이트
-  - POINT_HISTORY.description 필드 추가
-  - ORDERS.point_discount, cancel_reason 필드 추가
-  - PAYMENTS.payment_method, status, earned_point 필드 추가
-  - PRODUCT_STATISTICS 테이블 추가 (인기 상품 조회용)
-  - 인덱스 권장사항 추가
-  - 인기 상품 관리 비즈니스 로직 추가
+    - POINT_HISTORY.description 필드 추가
+    - ORDERS.point_discount, cancel_reason 필드 추가
+    - PAYMENTS.payment_method, status, earned_point 필드 추가
+    - PRODUCT_STATISTICS 테이블 추가 (인기 상품 조회용)
+    - 인덱스 권장사항 추가
+    - 인기 상품 관리 비즈니스 로직 추가
 - v1.1 (2024-10-30): CART.quantity 추가, COUPONS 유효기간 필드 추가, EXTERNAL_SYNC_LOG 테이블 추가
 - v1.0 (2024-10-30): 초기 작성

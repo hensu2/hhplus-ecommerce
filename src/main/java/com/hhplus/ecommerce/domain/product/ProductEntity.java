@@ -1,27 +1,47 @@
 package com.hhplus.ecommerce.domain.product;
 
 import com.hhplus.ecommerce.common.exception.InvalidInputException;
-import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
-import com.hhplus.ecommerce.presentation.product.res.ProductResponse;
-import com.hhplus.ecommerce.presentation.productOption.res.ProductStockResponse;
-import com.hhplus.ecommerce.presentation.productOption.res.StockOptionResponse;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.stream.Collectors;
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Entity
+@EntityListeners(AuditingEntityListener.class)
+@Table(name = "products")
+public class ProductEntity {
 
-public record ProductEntity(
-    long id,
-    long createdUserId,
-    String productName,
-    String content,
-    long price,
-    long createdAt,
-    long updatedAt
-) {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "created_user_id", nullable = false)
+    private Long createdUserId;
+
+    @Column(name = "product_name", nullable = false)
+    private String productName;
+
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
+    @Column(nullable = false)
+    private Long price;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Long createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private Long updatedAt;
+
     public static void validateProductId(Long productId) {
         if (productId == null) {
             throw new InvalidInputException("Product ID cannot be null");
@@ -29,24 +49,5 @@ public record ProductEntity(
         if (productId <= 0) {
             throw new InvalidInputException("Product ID must be greater than 0");
         }
-    }
-
-    public String getFormattedCreatedAt() {
-        return LocalDateTime.ofInstant(
-            Instant.ofEpochMilli(createdAt),
-            ZoneId.systemDefault()
-        ).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-    }
-
-    public ProductResponse toProductResponse() {
-        return new ProductResponse(id, productName, content, (int) price, getFormattedCreatedAt());
-    }
-
-    public ProductStockResponse toProductStockResponse(List<ProductOptionEntity> options) {
-        List<StockOptionResponse> stockOptions = options.stream()
-            .map(ProductOptionEntity::toStockOptionResponse)
-            .collect(Collectors.toList());
-
-        return new ProductStockResponse(id, productName, stockOptions);
     }
 }

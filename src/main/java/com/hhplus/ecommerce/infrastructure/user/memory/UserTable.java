@@ -31,7 +31,7 @@ public class UserTable {
     public UserEntity save(UserEntity user) {
         long id = ++cursor;
         long timestamp = System.currentTimeMillis();
-        UserEntity newUser = new UserEntity(id, user.username(), user.point(), user.role(), timestamp, timestamp);
+        UserEntity newUser = new UserEntity(id, user.getUsername(), user.getPoint(), user.getRole(), timestamp, timestamp);
         table.put(id, newUser);
         return newUser;
     }

@@ -15,15 +15,15 @@ public class PaymentTable {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     public PaymentEntity save(PaymentEntity payment) {
-        long id = payment.id() == 0 ? idGenerator.getAndIncrement() : payment.id();
+        long id = payment.getId() == null ? idGenerator.getAndIncrement() : payment.getId();
         PaymentEntity newPayment = new PaymentEntity(
             id,
-            payment.orderId(),
-            payment.userId(),
-            payment.amount(),
-            payment.status(),
-            payment.createdAt(),
-            payment.updatedAt()
+            payment.getOrderId(),
+            payment.getUserId(),
+            payment.getAmount(),
+            payment.getStatus(),
+            payment.getCreatedAt(),
+            payment.getUpdatedAt()
         );
         table.put(id, newPayment);
         return newPayment;
@@ -35,7 +35,7 @@ public class PaymentTable {
 
     public List<PaymentEntity> findByUserId(long userId) {
         return table.values().stream()
-            .filter(payment -> payment.userId() == userId)
+            .filter(payment -> payment.getUserId() == userId)
             .collect(Collectors.toList());
     }
 }

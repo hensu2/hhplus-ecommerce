@@ -1,15 +1,19 @@
 package com.hhplus.ecommerce.presentation.productOption.res;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class StockOptionResponse {
-    private Long optionId;
-    private String optionType;
-    private Integer stock;
-    private Integer additionalPrice;
+public record StockOptionResponse(
+        Long optionId,
+        String optionType,
+        Integer stock,
+        Integer additionalPrice
+) {
+    public StockOptionResponse(ProductOptionEntity option) {
+        this(
+            option.getId(),
+            option.getOptionType(),
+            option.getStock().intValue(),
+            option.getAdditionalPrice().intValue()
+        );
+    }
 }

@@ -6,20 +6,17 @@ import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
 import com.hhplus.ecommerce.presentation.productOption.res.ProductStockResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class GetProductStockUseCase {
 
     private final ProductRepository productRepository;
     private final ProductOptionRepository productOptionRepository;
-
-    public GetProductStockUseCase(ProductRepository productRepository, ProductOptionRepository productOptionRepository) {
-        this.productRepository = productRepository;
-        this.productOptionRepository = productOptionRepository;
-    }
 
     public ProductStockResponse execute(Long productId) {
         ProductEntity.validateProductId(productId);
@@ -29,6 +26,6 @@ public class GetProductStockUseCase {
 
         List<ProductOptionEntity> options = productOptionRepository.findByProductId(productId);
 
-        return product.toProductStockResponse(options);
+        return new ProductStockResponse(product, options);
     }
 }

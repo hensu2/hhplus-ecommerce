@@ -13,17 +13,18 @@ public class OrderTable {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     public OrderEntity save(OrderEntity order) {
-        long id = order.id() == 0 ? idGenerator.getAndIncrement() : order.id();
+        long id = order.getId() == null ? idGenerator.getAndIncrement() : order.getId();
         OrderEntity newOrder = new OrderEntity(
             id,
-            order.userId(),
-            order.totalAmount(),
-            order.discountAmount(),
-            order.finalAmount(),
-            order.couponHistoryId(),
-            order.status(),
-            order.createdAt(),
-            order.updatedAt()
+            order.getUserId(),
+            order.getTotalAmount(),
+            order.getDiscountAmount(),
+            order.getFinalAmount(),
+            order.getCouponHistoryId(),
+            order.getStatus(),
+            order.getOrderedAt(),
+            order.getCreatedAt(),
+            order.getUpdatedAt()
         );
         table.put(id, newOrder);
         return newOrder;

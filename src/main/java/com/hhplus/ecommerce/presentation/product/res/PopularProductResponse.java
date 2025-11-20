@@ -1,17 +1,24 @@
 package com.hhplus.ecommerce.presentation.product.res;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.hhplus.ecommerce.domain.product.ProductEntity;
+import com.hhplus.ecommerce.domain.product.ProductStatisticsEntity;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class PopularProductResponse {
-    private Long productId;
-    private String productName;
-    private Integer price;
-    private Long viewCount;
-    private Long salesCount;
-    private Long popularityScore;
+public record PopularProductResponse(
+        Long productId,
+        String productName,
+        Integer price,
+        Long viewCount,
+        Long salesCount,
+        Long popularityScore
+) {
+    public PopularProductResponse(ProductEntity product, ProductStatisticsEntity statistics) {
+        this(
+            product.getId(),
+            product.getProductName(),
+            product.getPrice().intValue(),
+            statistics.getViewCount(),
+            statistics.getSalesCount(),
+            statistics.getPopularityScore()
+        );
+    }
 }

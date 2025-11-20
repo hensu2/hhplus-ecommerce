@@ -12,17 +12,17 @@ public class OrderItemTable {
     private final AtomicLong idGenerator = new AtomicLong(1);
 
     public OrderItemEntity save(OrderItemEntity orderItem) {
-        long id = orderItem.id() == 0 ? idGenerator.getAndIncrement() : orderItem.id();
+        long id = orderItem.getId() == null ? idGenerator.getAndIncrement() : orderItem.getId();
         OrderItemEntity newOrderItem = new OrderItemEntity(
             id,
-            orderItem.orderId(),
-            orderItem.productId(),
-            orderItem.productOptionId(),
-            orderItem.productName(),
-            orderItem.optionType(),
-            orderItem.quantity(),
-            orderItem.price(),
-            orderItem.createdAt()
+            orderItem.getOrderId(),
+            orderItem.getProductId(),
+            orderItem.getProductOptionId(),
+            orderItem.getProductName(),
+            orderItem.getOptionType(),
+            orderItem.getQuantity(),
+            orderItem.getPrice(),
+            orderItem.getCreatedAt()
         );
         table.put(id, newOrderItem);
         return newOrderItem;

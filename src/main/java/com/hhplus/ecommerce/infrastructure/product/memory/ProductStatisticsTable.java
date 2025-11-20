@@ -13,7 +13,7 @@ public class ProductStatisticsTable {
     private final ConcurrentHashMap<Long, ProductStatisticsEntity> table = new ConcurrentHashMap<>();
 
     public ProductStatisticsEntity save(ProductStatisticsEntity statistics) {
-        table.put(statistics.productId(), statistics);
+        table.put(statistics.getProductId(), statistics);
         return statistics;
     }
 
@@ -27,7 +27,7 @@ public class ProductStatisticsTable {
 
     public ProductStatisticsEntity getOrCreateDefault(long productId) {
         return table.computeIfAbsent(productId, id ->
-            new ProductStatisticsEntity(id, 0, 0, System.currentTimeMillis())
+            new ProductStatisticsEntity(id, 0L, 0L, System.currentTimeMillis())
         );
     }
 
@@ -38,7 +38,7 @@ public class ProductStatisticsTable {
     public ProductStatisticsEntity incrementViewCount(long productId) {
         return table.compute(productId, (id, existing) -> {
             if (existing == null) {
-                return new ProductStatisticsEntity(id, 1, 0, System.currentTimeMillis());
+                return new ProductStatisticsEntity(id, 1L, 0L, System.currentTimeMillis());
             }
             return existing.increaseViewCount();
         });
@@ -51,7 +51,7 @@ public class ProductStatisticsTable {
     public ProductStatisticsEntity incrementSalesCount(long productId, int quantity) {
         return table.compute(productId, (id, existing) -> {
             if (existing == null) {
-                return new ProductStatisticsEntity(id, 0, quantity, System.currentTimeMillis());
+                return new ProductStatisticsEntity(id, 0L, (long) quantity, System.currentTimeMillis());
             }
             return existing.increaseSalesCount(quantity);
         });

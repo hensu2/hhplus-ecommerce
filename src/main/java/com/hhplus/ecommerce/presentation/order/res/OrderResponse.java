@@ -1,21 +1,33 @@
 package com.hhplus.ecommerce.presentation.order.res;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.hhplus.ecommerce.common.util.DateTimeUtils;
+import com.hhplus.ecommerce.domain.order.OrderEntity;
+import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 
 import java.util.List;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class OrderResponse {
-    private Long orderId;
-    private Long userId;
-    private Integer totalAmount;
-    private Integer discountAmount;
-    private Integer finalAmount;
-    private String status;
-    private List<OrderItemResponse> items;
-    private String createdAt;
+public record OrderResponse(
+        Long orderId,
+        Long userId,
+        Integer totalAmount,
+        Integer discountAmount,
+        Integer finalAmount,
+        Long couponHistoryId,
+        String status,
+        List<OrderItemResponse> items,
+        String createdAt
+) {
+    public OrderResponse(OrderEntity order, List<OrderItemEntity> items) {
+        this(
+            order.getId(),
+            order.getUserId(),
+            order.getTotalAmount(),
+            order.getDiscountAmount(),
+            order.getFinalAmount(),
+            order.getCouponHistoryId(),
+            order.getStatus().name(),
+            items.stream().map(OrderItemResponse::new).toList(),
+            DateTimeUtils.toLocalDateTime(order.getCreatedAt())
+        );
+    }
 }

@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: hhplus-ecommerce-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: ecommerce
+      MYSQL_USER: hhplus
+      MYSQL_PASSWORD: hhplus1234
+      TZ: Asia/Seoul
+    ports:
+      - "9910:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/init:/docker-entrypoint-initdb.d
+      - ./docker/conf/my.cnf:/etc/mysql/conf.d/my.cnf
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql-data:

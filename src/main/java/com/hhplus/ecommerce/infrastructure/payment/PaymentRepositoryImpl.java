@@ -1,33 +1,31 @@
 package com.hhplus.ecommerce.infrastructure.payment;
 
 import com.hhplus.ecommerce.domain.payment.PaymentEntity;
-import com.hhplus.ecommerce.infrastructure.payment.memory.PaymentTable;
+import com.hhplus.ecommerce.infrastructure.payment.jpa.PaymentJpaRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
+@RequiredArgsConstructor
 public class PaymentRepositoryImpl implements PaymentRepository {
 
-    private final PaymentTable paymentTable;
-
-    public PaymentRepositoryImpl(PaymentTable paymentTable) {
-        this.paymentTable = paymentTable;
-    }
+    private final PaymentJpaRepository paymentJpaRepository;
 
     @Override
     public PaymentEntity save(PaymentEntity payment) {
-        return paymentTable.save(payment);
+        return paymentJpaRepository.save(payment);
     }
 
     @Override
     public Optional<PaymentEntity> findById(long paymentId) {
-        return paymentTable.findById(paymentId);
+        return paymentJpaRepository.findById(paymentId);
     }
 
     @Override
     public List<PaymentEntity> findByUserId(long userId) {
-        return paymentTable.findByUserId(userId);
+        return paymentJpaRepository.findByUserId(userId);
     }
 }

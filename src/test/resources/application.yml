@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: hhplus-ecommerce
+
+  # Database Configuration (MySQL) for Test
+  datasource:
+    url: jdbc:p6spy:mysql://localhost:9910/ecommerce?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+    username: hhplus
+    password: hhplus1234
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA Configuration
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        use_sql_comments: true
+    open-in-view: false
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.hhplus: DEBUG
+    org.hibernate.SQL: DEBUG

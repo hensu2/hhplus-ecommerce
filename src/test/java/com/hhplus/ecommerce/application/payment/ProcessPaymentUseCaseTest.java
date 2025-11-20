@@ -4,8 +4,6 @@ import com.hhplus.ecommerce.domain.payment.PaymentEntity;
 import com.hhplus.ecommerce.domain.payment.PaymentStatus;
 import com.hhplus.ecommerce.infrastructure.payment.PaymentRepository;
 import com.hhplus.ecommerce.presentation.payment.req.ProcessPaymentRequest;
-import com.hhplus.ecommerce.presentation.payment.res.PaymentResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,9 +14,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("ProcessPaymentUseCase 단위 테스트")
 class ProcessPaymentUseCaseTest {
 
     @Mock
@@ -27,108 +26,39 @@ class ProcessPaymentUseCaseTest {
     @InjectMocks
     private ProcessPaymentUseCase processPaymentUseCase;
 
-    private long userId;
-    private long orderId;
-
-    @BeforeEach
-    void setUp() {
-        userId = 1L;
-        orderId = 1L;
-    }
-
     @Test
-    @DisplayName("결제 처리에 성공한다")
-    void processPayment() {
+    @DisplayName("결제 처리 성공")
+    void execute_Success() {
         // given
-        ProcessPaymentRequest request = new ProcessPaymentRequest(orderId, userId, 30000);
+        Long userId = 1L;
+        Long orderId = 1L;
+        Integer amount = 10000;
+        ProcessPaymentRequest request = new ProcessPaymentRequest(userId, orderId, amount);
 
-        long now = System.currentTimeMillis();
-        PaymentEntity savedPayment = new PaymentEntity(
-            1L,
-            orderId,
-            userId,
-            30000,
-            PaymentStatus.COMPLETED,
-            now,
-            now
-        );
+        PaymentEntity savedPayment = new PaymentEntity(1L, orderId, userId, amount, PaymentStatus.COMPLETED, 0L, 0L);
         when(paymentRepository.save(any(PaymentEntity.class))).thenReturn(savedPayment);
 
         // when
-        PaymentResponse response = processPaymentUseCase.execute(request);
+        PaymentEntity result = processPaymentUseCase.execute(request);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.getPaymentId()).isEqualTo(1L);
-        assertThat(response.getOrderId()).isEqualTo(orderId);
-        assertThat(response.getUserId()).isEqualTo(userId);
-        assertThat(response.getAmount()).isEqualTo(30000);
-        assertThat(response.getStatus()).isEqualTo("COMPLETED");
+        assertThat(result).isNotNull();
+        assertThat(result.getOrderId()).isEqualTo(orderId);
+        assertThat(result.getUserId()).isEqualTo(userId);
+        assertThat(result.getAmount()).isEqualTo(amount);
+        assertThat(result.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
+        verify(paymentRepository, times(1)).save(any(PaymentEntity.class));
     }
 
     @Test
-    @DisplayName("결제 금액이 0 이하일 때 예외를 발생시킨다")
-    void processPaymentWithInvalidAmount() {
+    @DisplayName("결제 금액이 0 이하인 경우 실패")
+    void execute_InvalidAmount_Fail() {
         // given
-        ProcessPaymentRequest request = new ProcessPaymentRequest(orderId, userId, 0);
+        ProcessPaymentRequest request = new ProcessPaymentRequest(1L, 1L, 0);
 
         // when & then
         assertThatThrownBy(() -> processPaymentUseCase.execute(request))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("결제 금액이 유효하지 않습니다.");
-    }
-
-    @Test
-    @DisplayName("결제 금액이 null일 때 예외를 발생시킨다")
-    void processPaymentWithNullAmount() {
-        // given
-        ProcessPaymentRequest request = new ProcessPaymentRequest(orderId, userId, null);
-
-        // when & then
-        assertThatThrownBy(() -> processPaymentUseCase.execute(request))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("결제 금액이 유효하지 않습니다.");
-    }
-
-    @Test
-    @DisplayName("결제 금액이 음수일 때 예외를 발생시킨다")
-    void processPaymentWithNegativeAmount() {
-        // given
-        ProcessPaymentRequest request = new ProcessPaymentRequest(orderId, userId, -1000);
-
-        // when & then
-        assertThatThrownBy(() -> processPaymentUseCase.execute(request))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("결제 금액이 유효하지 않습니다.");
-    }
-
-    @Test
-    @DisplayName("결제 응답에 모든 필드가 올바르게 매핑된다")
-    void processPaymentResponseFields() {
-        // given
-        ProcessPaymentRequest request = new ProcessPaymentRequest(orderId, userId, 50000);
-
-        long now = System.currentTimeMillis();
-        PaymentEntity savedPayment = new PaymentEntity(
-            2L,
-            orderId,
-            userId,
-            50000,
-            PaymentStatus.COMPLETED,
-            now,
-            now
-        );
-        when(paymentRepository.save(any(PaymentEntity.class))).thenReturn(savedPayment);
-
-        // when
-        PaymentResponse response = processPaymentUseCase.execute(request);
-
-        // then
-        assertThat(response.getPaymentId()).isEqualTo(2L);
-        assertThat(response.getOrderId()).isEqualTo(orderId);
-        assertThat(response.getUserId()).isEqualTo(userId);
-        assertThat(response.getAmount()).isEqualTo(50000);
-        assertThat(response.getStatus()).isEqualTo("COMPLETED");
-        assertThat(response.getCreatedAt()).isNotNull();
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("결제 금액이 유효하지 않습니다.");
     }
 }

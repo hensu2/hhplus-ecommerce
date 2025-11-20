@@ -1,5 +1,6 @@
 package com.hhplus.ecommerce.infrastructure.user;
 
+import com.hhplus.ecommerce.common.exception.UserNotFoundException;
 import com.hhplus.ecommerce.domain.user.UserEntity;
 
 import java.util.List;
@@ -9,4 +10,9 @@ public interface UserRepository {
     Optional<UserEntity> findById(Long id);
     List<UserEntity> findAll();
     UserEntity save(UserEntity user);
+
+    default UserEntity getOrThrow(Long id) {
+        return findById(id)
+            .orElseThrow(() -> new UserNotFoundException("사용자를 찾을 수 없습니다. ID: " + id));
+    }
 }

@@ -1,20 +1,31 @@
 package com.hhplus.ecommerce.presentation.coupon.res;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.hhplus.ecommerce.common.util.DateTimeUtils;
+import com.hhplus.ecommerce.domain.coupon.CouponEntity;
+import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class IssueCouponResponse {
-    private Long id;
-    private Long couponId;
-    private String couponName;
-    private String discountType;
-    private Integer discountAmount;
-    private String validFrom;
-    private String validUntil;
-    private String status;
-    private String issuedAt;
+public record IssueCouponResponse(
+        Long id,
+        Long couponId,
+        String couponName,
+        String discountType,
+        Integer discountAmount,
+        String validFrom,
+        String validUntil,
+        String status,
+        String issuedAt
+) {
+    public IssueCouponResponse(CouponHistoryEntity history, CouponEntity coupon) {
+        this(
+            history.getId(),
+            history.getCouponId(),
+            coupon.getCouponName(),
+            coupon.getDiscountType().name(),
+            coupon.getDiscountAmount(),
+            DateTimeUtils.toLocalDateTime(coupon.getValidFrom()),
+            DateTimeUtils.toLocalDateTime(coupon.getValidUntil()),
+            history.getStatus().name(),
+            DateTimeUtils.toLocalDateTime(history.getIssuedAt())
+        );
+    }
 }

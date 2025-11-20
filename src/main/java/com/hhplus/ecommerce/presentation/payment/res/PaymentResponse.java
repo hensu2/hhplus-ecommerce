@@ -1,17 +1,24 @@
 package com.hhplus.ecommerce.presentation.payment.res;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.hhplus.ecommerce.common.util.DateTimeUtils;
+import com.hhplus.ecommerce.domain.payment.PaymentEntity;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class PaymentResponse {
-    private Long paymentId;
-    private Long orderId;
-    private Long userId;
-    private Integer amount;
-    private String status;
-    private String createdAt;
+public record PaymentResponse(
+        Long paymentId,
+        Long orderId,
+        Long userId,
+        Integer amount,
+        String status,
+        String createdAt
+) {
+    public PaymentResponse(PaymentEntity payment) {
+        this(
+            payment.getId(),
+            payment.getOrderId(),
+            payment.getUserId(),
+            payment.getAmount(),
+            payment.getStatus().name(),
+            DateTimeUtils.toLocalDateTime(payment.getCreatedAt())
+        );
+    }
 }

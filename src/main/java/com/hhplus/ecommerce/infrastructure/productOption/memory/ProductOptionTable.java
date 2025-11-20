@@ -31,7 +31,7 @@ public class ProductOptionTable {
 
     public List<ProductOptionEntity> findByProductId(Long productId) {
         return table.values().stream()
-            .filter(option -> option.productId() == productId)
+            .filter(option -> option.getProductId().equals(productId))
             .collect(Collectors.toList());
     }
 
@@ -40,7 +40,7 @@ public class ProductOptionTable {
     }
 
     public ProductOptionEntity save(ProductOptionEntity productOption) {
-        table.put(productOption.id(), productOption);
+        table.put(productOption.getId(), productOption);
         return productOption;
     }
 

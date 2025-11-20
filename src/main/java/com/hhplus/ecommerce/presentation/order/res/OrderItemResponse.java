@@ -1,17 +1,23 @@
 package com.hhplus.ecommerce.presentation.order.res;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class OrderItemResponse {
-    private Long productId;
-    private Long productOptionId;
-    private String productName;
-    private String optionType;
-    private Integer quantity;
-    private Integer price;
+public record OrderItemResponse(
+        Long productId,
+        Long productOptionId,
+        String productName,
+        String optionType,
+        Integer quantity,
+        Integer price
+) {
+    public OrderItemResponse(OrderItemEntity item) {
+        this(
+            item.getProductId(),
+            item.getProductOptionId(),
+            item.getProductName(),
+            item.getOptionType(),
+            item.getQuantity(),
+            item.getPrice()
+        );
+    }
 }

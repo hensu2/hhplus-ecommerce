@@ -1,27 +1,48 @@
 package com.hhplus.ecommerce.domain.productOption;
 
 import com.hhplus.ecommerce.common.exception.InvalidStockUpdateException;
-import com.hhplus.ecommerce.presentation.productOption.res.StockOptionResponse;
-import com.hhplus.ecommerce.presentation.productOption.res.UpdateStockResponse;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-public record ProductOptionEntity(
-    long id,
-    long productId,
-    String optionType,
-    long additionalPrice,
-    long stock,
-    long createdAt,
-    long updatedAt
-) {
-    public StockOptionResponse toStockOptionResponse() {
-        return new StockOptionResponse(id, optionType, (int) stock, (int) additionalPrice);
-    }
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Entity
+@EntityListeners(AuditingEntityListener.class)
+@Table(name = "product_options")
+public class ProductOptionEntity {
 
-    public UpdateStockResponse toUpdateStockResponse() {
-        return new UpdateStockResponse(id, optionType, stock, additionalPrice);
-    }
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public ProductOptionEntity updateStock(StockUpdateType type, int amount) {
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
+
+    @Column(name = "option_type", nullable = false)
+    private String optionType;
+
+    @Column(name = "additional_price", nullable = false)
+    private Long additionalPrice;
+
+    @Column(nullable = false)
+    private Long stock;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Long createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private Long updatedAt;
+
+    public ProductOptionEntity updateStock(StockUpdateType type, Integer amount) {
         long newStock = switch (type) {
             case SET -> amount;
             case INCREASE -> this.stock + amount;
@@ -34,14 +55,7 @@ public record ProductOptionEntity(
             }
         };
 
-        return new ProductOptionEntity(
-            this.id,
-            this.productId,
-            this.optionType,
-            this.additionalPrice,
-            newStock,
-            this.createdAt,
-            System.currentTimeMillis()
-        );
+        this.stock = newStock;
+        return this;
     }
 }

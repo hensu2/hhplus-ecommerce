@@ -1,23 +1,37 @@
 package com.hhplus.ecommerce.presentation.coupon.res;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.hhplus.ecommerce.common.util.DateTimeUtils;
+import com.hhplus.ecommerce.domain.coupon.CouponEntity;
+import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class CouponResponse {
-    private Long id;
-    private Long couponId;
-    private String couponName;
-    private String discountType;
-    private Integer discountAmount;
-    private Integer useMinAmount;
-    private Integer useMaxAmount;
-    private String validFrom;
-    private String validUntil;
-    private String status;
-    private String issuedAt;
-    private String usedAt;
+public record CouponResponse(
+        Long id,
+        Long couponId,
+        String couponName,
+        String discountType,
+        Integer discountAmount,
+        Integer useMinAmount,
+        Integer useMaxAmount,
+        String validFrom,
+        String validUntil,
+        String status,
+        String issuedAt,
+        String usedAt
+) {
+    public CouponResponse(CouponHistoryEntity history, CouponEntity coupon) {
+        this(
+            history.getId(),
+            history.getCouponId(),
+            coupon.getCouponName(),
+            coupon.getDiscountType().name(),
+            coupon.getDiscountAmount(),
+            coupon.getUseMinAmount(),
+            coupon.getUseMaxAmount(),
+            DateTimeUtils.toLocalDateTime(coupon.getValidFrom()),
+            DateTimeUtils.toLocalDateTime(coupon.getValidUntil()),
+            history.getStatus().name(),
+            DateTimeUtils.toLocalDateTime(history.getIssuedAt()),
+            history.getUsedAt() != null ? DateTimeUtils.toLocalDateTime(history.getUsedAt()) : null
+        );
+    }
 }

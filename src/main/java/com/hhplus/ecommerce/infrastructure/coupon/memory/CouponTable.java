@@ -63,7 +63,7 @@ public class CouponTable {
     }
 
     public CouponEntity save(CouponEntity coupon) {
-        table.put(coupon.id(), coupon);
+        table.put(coupon.getId(), coupon);
         return coupon;
     }
 
