@@ -11,7 +11,7 @@ services:
       MYSQL_PASSWORD: hhplus1234
       TZ: Asia/Seoul
     ports:
-      - "9910:3306"
+      - "9910:9910"
     volumes:
       - mysql-data:/var/lib/mysql
       - ./docker/init:/docker-entrypoint-initdb.d
@@ -25,5 +25,19 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7.2-alpine
+    container_name: hhplus-ecommerce-redis
+    ports:
+      - "9911:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 3s
+      retries: 10
+
 volumes:
   mysql-data:
+  redis-data:
