@@ -39,6 +39,19 @@ spring:
           min-idle: 2
           max-wait: -1ms
 
+# Redisson Configuration
+spring.redis.redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://localhost:9911"
+      connectionPoolSize: 64
+      connectionMinimumIdleSize: 10
+      idleConnectionTimeout: 10000
+      connectTimeout: 10000
+      timeout: 3000
+      retryAttempts: 3
+      retryInterval: 1500
+
 server:
   port: 8080
 
