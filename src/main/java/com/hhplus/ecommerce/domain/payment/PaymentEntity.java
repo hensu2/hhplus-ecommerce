@@ -14,7 +14,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @AllArgsConstructor
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "payments")
+@Table(name = "payments",
+       uniqueConstraints = @UniqueConstraint(
+           name = "uk_payment_order_id",
+           columnNames = "order_id"
+       ))
 public class PaymentEntity {
 
     @Id

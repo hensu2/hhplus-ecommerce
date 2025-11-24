@@ -21,8 +21,8 @@ public class ChargePointUseCase {
             throw new IllegalArgumentException("충전 금액은 1,000원 이상이어야 합니다.");
         }
 
-        // Get user and update point
-        UserEntity user = userRepository.getOrThrow(userId);
+        // Get user with pessimistic lock and update point
+        UserEntity user = userRepository.getOrThrowWithLock(userId);
         Long newPoint = user.getPoint() + amount;
         user.setPoint(newPoint);
         UserEntity savedUser = userRepository.save(user);

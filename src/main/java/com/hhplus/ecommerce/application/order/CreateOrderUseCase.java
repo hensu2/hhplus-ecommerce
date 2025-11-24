@@ -12,6 +12,7 @@ import com.hhplus.ecommerce.presentation.order.req.CreateOrderRequest;
 import com.hhplus.ecommerce.presentation.order.req.OrderItemRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,7 @@ public class CreateOrderUseCase {
     private final ProductOptionRepository productOptionRepository;
     private final ProductRepository productRepository;
 
+    @Transactional
     public OrderEntity execute(CreateOrderRequest request) {
         long now = System.currentTimeMillis();
 

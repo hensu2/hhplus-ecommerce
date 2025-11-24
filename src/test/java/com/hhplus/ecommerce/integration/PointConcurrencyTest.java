@@ -35,8 +35,8 @@ class PointConcurrencyTest {
     }
 
     @Test
-    @DisplayName("동시성 문제 - Lost Update로 인한 포인트 손실")
-    void concurrentPointCharge_LostUpdate() throws InterruptedException {
+    @DisplayName("동시성 제어 검증 - 10명이 동시 충전해도 정확히 10,000원 충전됨")
+    void concurrentPointCharge_WithOptimisticLock() throws InterruptedException {
         // given
         UserEntity user = userRepository.getOrThrow(testUserId);
         Long initialPoint = user.getPoint();
@@ -85,16 +85,13 @@ class PointConcurrencyTest {
         System.out.println("손실 금액: " + (expectedPoint - finalPoint));
         System.out.println("==========================================");
 
-        // 동시성 제어가 없으면 Lost Update 발생 → 포인트 손실!
-        assertThat(finalPoint).isLessThan(expectedPoint)
-                .withFailMessage("Lost Update 문제로 포인트가 손실되었습니다!");
-
-        // 만약 동시성 제어가 제대로 되어 있다면 예상값과 같아야 함
-        // assertThat(finalPoint).isEqualTo(expectedPoint);
+        // 낙관적 락(@Version)으로 동시성 제어 - 정확한 포인트 충전 보장
+        assertThat(finalPoint).isEqualTo(expectedPoint)
+                .withFailMessage("낙관적 락으로 모든 충전이 정확히 반영되어야 합니다!");
     }
 
     @Test
-    @DisplayName("동시성 문제 - 여러 사용자가 동시에 포인트 충전")
+    @DisplayName("동시성 제어 검증 - 여러 사용자가 동시 충전해도 각자 정확한 금액 충전")
     void concurrentMultipleUsers_PointCharge() throws InterruptedException {
         // given
         Long[] userIds = {1L, 2L, 3L};
@@ -133,32 +130,24 @@ class PointConcurrencyTest {
         latch.await();
         executorService.shutdown();
 
-        // then - 각 사용자별 포인트 검증
+        // then - 각 사용자별 포인트 정확성 검증
         System.out.println("========== 다중 사용자 포인트 동시성 테스트 결과 ==========");
         System.out.println("전체 성공 요청 수: " + successCount.get());
         System.out.println("전체 실패 요청 수: " + failCount.get());
 
-        int lostUpdateCount = 0;
         for (int i = 0; i < userIds.length; i++) {
             UserEntity user = userRepository.getOrThrow(userIds[i]);
             Long expectedPoint = initialPoints[i] + (chargeAmount * chargeCountPerUser);
             Long actualPoint = user.getPoint();
-            Long lostAmount = expectedPoint - actualPoint;
 
             System.out.println("사용자 " + userIds[i] + " - 초기: " + initialPoints[i]
-                + ", 예상: " + expectedPoint + ", 실제: " + actualPoint
-                + ", 손실: " + lostAmount);
+                + ", 예상: " + expectedPoint + ", 실제: " + actualPoint);
 
-            if (actualPoint < expectedPoint) {
-                lostUpdateCount++;
-            }
+            // 낙관적 락으로 각 사용자별 정확한 포인트 충전 보장
+            assertThat(actualPoint).isEqualTo(expectedPoint)
+                    .withFailMessage("사용자 " + userIds[i] + "의 포인트가 정확히 충전되어야 합니다!");
         }
 
-        System.out.println("Lost Update 발생 사용자 수: " + lostUpdateCount);
         System.out.println("====================================================");
-
-        // 동시성 제어가 없으면 최소 1명 이상의 사용자에서 Lost Update 발생
-        assertThat(lostUpdateCount).isGreaterThan(0)
-                .withFailMessage("동시성 제어가 없어 Lost Update가 발생했습니다!");
     }
 }

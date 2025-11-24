@@ -5,6 +5,7 @@ import com.hhplus.ecommerce.domain.payment.PaymentStatus;
 import com.hhplus.ecommerce.infrastructure.payment.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -12,6 +13,7 @@ public class CancelPaymentUseCase {
 
     private final PaymentRepository paymentRepository;
 
+    @Transactional
     public PaymentEntity execute(long paymentId) {
         PaymentEntity payment = paymentRepository.getOrThrow(paymentId);
 
