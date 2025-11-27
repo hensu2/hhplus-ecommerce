@@ -7,7 +7,6 @@ import com.hhplus.ecommerce.domain.product.ProductStatisticsEntity;
 import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.infrastructure.product.ProductStatisticsRepository;
-import com.hhplus.ecommerce.infrastructure.product.memory.ProductStatisticsTable;
 import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
 import com.hhplus.ecommerce.presentation.product.res.ProductDetailResponse;
 import com.hhplus.ecommerce.presentation.product.res.ProductOptionResponse;
@@ -41,9 +40,6 @@ class GetProductUseCaseTest {
     @Mock
     private ProductStatisticsRepository productStatisticsRepository;
 
-    @Mock
-    private ProductStatisticsTable productStatisticsTable;
-
     @InjectMocks
     private GetProductUseCase getProductUseCase;
 
@@ -66,12 +62,12 @@ class GetProductUseCaseTest {
     void execute_ValidProductId_ReturnsProductDetail() {
         // given
         Long productId = 1L;
-        ProductStatisticsEntity updatedStats = new ProductStatisticsEntity(productId, 11, 5, System.currentTimeMillis());
+        ProductStatisticsEntity existingStats = new ProductStatisticsEntity(productId, 10L, 5L, System.currentTimeMillis());
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
         when(productOptionRepository.findByProductId(productId)).thenReturn(testOptions);
-        when(productStatisticsTable.incrementViewCount(productId)).thenReturn(updatedStats);
-        when(productStatisticsRepository.save(any())).thenReturn(updatedStats);
+        when(productStatisticsRepository.findByProductId(productId)).thenReturn(Optional.of(existingStats));
+        when(productStatisticsRepository.save(any())).thenReturn(existingStats);
 
         // when
         ProductDetailResponse response = getProductUseCase.execute(productId);
@@ -96,12 +92,12 @@ class GetProductUseCaseTest {
     void execute_ProductWithNoOptions_ReturnsProductDetailWithEmptyOptions() {
         // given
         Long productId = 1L;
-        ProductStatisticsEntity updatedStats = new ProductStatisticsEntity(productId, 11, 5, System.currentTimeMillis());
+        ProductStatisticsEntity existingStats = new ProductStatisticsEntity(productId, 10L, 5L, System.currentTimeMillis());
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
         when(productOptionRepository.findByProductId(productId)).thenReturn(List.of());
-        when(productStatisticsTable.incrementViewCount(productId)).thenReturn(updatedStats);
-        when(productStatisticsRepository.save(any())).thenReturn(updatedStats);
+        when(productStatisticsRepository.findByProductId(productId)).thenReturn(Optional.of(existingStats));
+        when(productStatisticsRepository.save(any())).thenReturn(existingStats);
 
         // when
         ProductDetailResponse response = getProductUseCase.execute(productId);

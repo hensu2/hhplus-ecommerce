@@ -192,21 +192,7 @@ CREATE TABLE IF NOT EXISTS payments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ===================================
--- 11. PRODUCT_STATISTICS (상품 통계)
--- ===================================
-CREATE TABLE IF NOT EXISTS product_statistics (
-    product_id BIGINT PRIMARY KEY,
-    view_count BIGINT NOT NULL DEFAULT 0,
-    sales_count BIGINT NOT NULL DEFAULT 0,
-    updated_at BIGINT NOT NULL,
-    INDEX idx_sales_count (sales_count DESC),
-    INDEX idx_view_count (view_count DESC),
-    INDEX idx_updated_at (updated_at),
-    FOREIGN KEY (product_id) REFERENCES products(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ===================================
--- 12. EXTERNAL_SYNC_LOG (외부 동기화 로그)
+-- 11. EXTERNAL_SYNC_LOG (외부 동기화 로그)
 -- ===================================
 CREATE TABLE IF NOT EXISTS external_sync_log (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
