@@ -86,18 +86,18 @@ class PaymentConcurrencyTest {
         latch.await();
         executorService.shutdown();
 
-        // then - UNIQUE 제약조건으로 중복 결제 방지
+        // then - Redisson 분산 락으로 중복 결제 방지
         List<PaymentEntity> payments = paymentRepository.findByOrderId(orderId);
 
-        System.out.println("========== 결제 동시성 테스트 결과 ==========");
+        System.out.println("========== 결제 동시성 테스트 결과 (Redisson) ==========");
         System.out.println("성공한 결제 요청 수: " + successCount.get());
         System.out.println("실패한 결제 요청 수: " + failCount.get());
         System.out.println("실제 저장된 결제 건수: " + payments.size());
-        System.out.println("==========================================");
+        System.out.println("================================================");
 
-        // UNIQUE 제약조건으로 중복 결제 방지 - 1건만 생성
+        // Redisson 분산 락으로 중복 결제 방지 - 1건만 생성 (멱등성 보장)
         assertThat(payments.size()).isEqualTo(1)
-                .withFailMessage("UNIQUE 제약조건으로 중복 결제가 방지되어야 합니다!");
+                .withFailMessage("Redisson 분산 락으로 중복 결제가 방지되어야 합니다!");
 
         // 성공은 1건, 나머지는 실패해야 함
         assertThat(successCount.get()).isEqualTo(1)
@@ -151,18 +151,18 @@ class PaymentConcurrencyTest {
         latch.await();
         executorService.shutdown();
 
-        // then - 동시성 제어로 1건만 취소 성공
+        // then - Redisson 분산 락으로 1건만 취소 성공
         PaymentEntity finalPayment = paymentRepository.getOrThrow(paymentId);
 
-        System.out.println("========== 결제 취소 동시성 테스트 결과 ==========");
+        System.out.println("========== 결제 취소 동시성 테스트 결과 (Redisson) ==========");
         System.out.println("취소 시도 성공 수: " + successCount.get());
         System.out.println("취소 시도 실패 수: " + failCount.get());
         System.out.println("최종 결제 상태: " + finalPayment.getStatus());
-        System.out.println("============================================");
+        System.out.println("======================================================");
 
-        // 동시성 제어로 1건만 취소 성공, 나머지는 실패
+        // Redisson 분산 락으로 1건만 취소 성공, 나머지는 실패
         assertThat(successCount.get()).isEqualTo(1)
-                .withFailMessage("중복 취소 시도는 실패해야 합니다!");
+                .withFailMessage("Redisson 분산 락으로 중복 취소 시도는 실패해야 합니다!");
         assertThat(failCount.get()).isEqualTo(threadCount - 1)
                 .withFailMessage("중복 취소 시도는 모두 실패해야 합니다!");
         assertThat(finalPayment.getStatus()).isEqualTo(PaymentStatus.CANCELLED)

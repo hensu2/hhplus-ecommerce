@@ -11,7 +11,7 @@ services:
       MYSQL_PASSWORD: hhplus1234
       TZ: Asia/Seoul
     ports:
-      - "9910:9910"
+      - "9910:3306"
     volumes:
       - mysql-data:/var/lib/mysql
       - ./docker/init:/docker-entrypoint-initdb.d

@@ -1,5 +1,6 @@
 package com.hhplus.ecommerce.integration;
 
+import com.hhplus.ecommerce.application.productOption.DecreaseStockUseCase;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +19,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @DisplayName("재고 동시성 테스트")
 class StockConcurrencyTest {
+
+    @Autowired
+    private DecreaseStockUseCase decreaseStockUseCase;
 
     @Autowired
     private ProductOptionRepository productOptionRepository;
@@ -60,7 +64,7 @@ class StockConcurrencyTest {
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    productOptionRepository.decreaseStock(testProductOptionId, purchaseQuantity);
+                    decreaseStockUseCase.execute(testProductOptionId, purchaseQuantity);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();
@@ -91,9 +95,9 @@ class StockConcurrencyTest {
         System.out.println("실제 차감 수량: " + actualDecrease);
         System.out.println("=========================================");
 
-        // ConcurrentHashMap.compute()로 동시성 제어 - 정확한 재고 차감 보장
+        // Redisson 분산 락(Pub/Sub)으로 동시성 제어 - 정확한 재고 차감 보장
         assertThat(finalStock).isEqualTo(expectedStock)
-                .withFailMessage("동시성 제어로 모든 재고 차감이 정확히 반영되어야 합니다!");
+                .withFailMessage("Redisson 분산 락으로 모든 재고 차감이 정확히 반영되어야 합니다!");
     }
 
     @Test
@@ -116,7 +120,7 @@ class StockConcurrencyTest {
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    productOptionRepository.decreaseStock(testProductOptionId, purchaseQuantity);
+                    decreaseStockUseCase.execute(testProductOptionId, purchaseQuantity);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();

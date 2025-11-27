@@ -104,9 +104,9 @@ class CouponConcurrencyTest {
         System.out.println("실제 최종 재고: " + finalStock);
         System.out.println("=========================================");
 
-        // ConcurrentHashMap.compute()로 동시성 제어 - 정확한 쿠폰 발급 보장
+        // Redisson 분산 락(Pub/Sub)으로 동시성 제어 - 정확한 쿠폰 발급 보장
         assertThat(finalStock).isEqualTo(expectedStock)
-                .withFailMessage("동시성 제어로 정확한 쿠폰 재고 차감이 되어야 합니다!");
+                .withFailMessage("Redisson 분산 락으로 정확한 쿠폰 재고 차감이 되어야 합니다!");
 
         // 재고는 음수가 될 수 없음
         assertThat(finalStock).isGreaterThanOrEqualTo(0)

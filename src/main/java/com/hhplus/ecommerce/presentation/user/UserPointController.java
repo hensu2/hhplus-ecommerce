@@ -3,10 +3,12 @@ package com.hhplus.ecommerce.presentation.user;
 import com.hhplus.ecommerce.application.user.ChargePointUseCase;
 import com.hhplus.ecommerce.application.user.GetPointHistoryUseCase;
 import com.hhplus.ecommerce.application.user.GetPointUseCase;
+import com.hhplus.ecommerce.application.user.UsePointUseCase;
 import com.hhplus.ecommerce.common.util.DateTimeUtils;
 import com.hhplus.ecommerce.domain.user.PointHistoryEntity;
 import com.hhplus.ecommerce.domain.user.UserEntity;
 import com.hhplus.ecommerce.presentation.user.req.ChargePointRequest;
+import com.hhplus.ecommerce.presentation.user.req.UsePointRequest;
 import com.hhplus.ecommerce.presentation.user.res.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +26,7 @@ public class UserPointController {
 
     private final GetPointUseCase getPointUseCase;
     private final ChargePointUseCase chargePointUseCase;
+    private final UsePointUseCase usePointUseCase;
     private final GetPointHistoryUseCase getPointHistoryUseCase;
 
     // 포인트 조회 (GET /api/users/me/point)
@@ -51,6 +54,23 @@ public class UserPointController {
                 request.amount(),
                 savedUser.getPoint().intValue(),
                 "EARN",
+                DateTimeUtils.toLocalDateTime(savedUser.getUpdatedAt())
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    // 포인트 사용 (POST /api/users/me/point/use)
+    @Operation(summary = "포인트 사용", description = "사용자의 포인트를 사용합니다.")
+    @PostMapping("/use")
+    public ResponseEntity<ChargePointResponse> usePoint(
+            @RequestParam Long userId,
+            @RequestBody UsePointRequest request) {
+        UserEntity savedUser = usePointUseCase.execute(userId, request.amount().longValue());
+        ChargePointResponse response = new ChargePointResponse(
+                savedUser.getId(),
+                request.amount(),
+                savedUser.getPoint().intValue(),
+                "USE",
                 DateTimeUtils.toLocalDateTime(savedUser.getUpdatedAt())
         );
         return ResponseEntity.ok(response);

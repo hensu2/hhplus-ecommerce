@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
-public class ChargePointUseCase {
+public class UsePointUseCase {
 
     private final UserRepository userRepository;
     private final PointHistoryRepository pointHistoryRepository;
@@ -22,8 +22,8 @@ public class ChargePointUseCase {
     private final TransactionTemplate transactionTemplate;
 
     public UserEntity execute(Long userId, Long amount) {
-        if (amount == null || amount < 1000) {
-            throw new IllegalArgumentException("충전 금액은 1,000원 이상이어야 합니다.");
+        if (amount == null || amount <= 0) {
+            throw new IllegalArgumentException("사용 금액은 0보다 커야 합니다.");
         }
 
         String lockKey = "user:point:lock:" + userId;
@@ -39,9 +39,15 @@ public class ChargePointUseCase {
 
             // 2. 트랜잭션 내에서 비즈니스 로직 수행
             return transactionTemplate.execute(status -> {
-                // Get user and update point
+                // Get user and check balance
                 UserEntity user = userRepository.getOrThrow(userId);
-                Long newPoint = user.getPoint() + amount;
+
+                if (user.getPoint() < amount) {
+                    throw new IllegalArgumentException("포인트가 부족합니다. 현재 포인트: " + user.getPoint());
+                }
+
+                // Update point
+                Long newPoint = user.getPoint() - amount;
                 user.setPoint(newPoint);
                 UserEntity savedUser = userRepository.save(user);
 
@@ -49,8 +55,8 @@ public class ChargePointUseCase {
                 PointHistoryEntity history = PointHistoryEntity.create(
                         userId,
                         amount,
-                        "EARN",
-                        "포인트 충전"
+                        "USE",
+                        "포인트 사용"
                 );
                 pointHistoryRepository.save(history);
 

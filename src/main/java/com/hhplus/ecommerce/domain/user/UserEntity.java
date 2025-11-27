@@ -32,10 +32,6 @@ public class UserEntity {
     @Column(nullable = false)
     private String role;
 
-    @Version
-    @Column(nullable = false)
-    private Long version;
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Long createdAt;
@@ -58,7 +54,7 @@ public class UserEntity {
         validatePoint(point);
         validateRole(role);
         long now = System.currentTimeMillis();
-        return new UserEntity(null, username, point, role, null, now, now);
+        return new UserEntity(null, username, point, role, now, now);
     }
 
     private static void validateUsername(String username) {
