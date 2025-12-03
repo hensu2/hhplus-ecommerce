@@ -3,6 +3,7 @@ package com.hhplus.ecommerce.application.order;
 import com.hhplus.ecommerce.domain.order.OrderEntity;
 import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 import com.hhplus.ecommerce.domain.order.OrderStatus;
+import com.hhplus.ecommerce.domain.order.event.OrderCreatedEvent;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.domain.productOption.StockUpdateType;
@@ -14,6 +15,7 @@ import com.hhplus.ecommerce.presentation.order.req.OrderItemRequest;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -30,6 +32,7 @@ public class CreateOrderUseCase {
     private final ProductRepository productRepository;
     private final RedissonClient redissonClient;
     private final TransactionTemplate transactionTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     public OrderEntity execute(CreateOrderRequest request) {
         List<RLock> locks = new ArrayList<>();
@@ -124,6 +127,7 @@ public class CreateOrderUseCase {
                 );
                 OrderEntity savedOrder = orderRepository.save(order);
 
+                List<OrderItemEntity> savedItems = new ArrayList<>();
                 for (OrderItemEntity orderItem : orderItems) {
                     OrderItemEntity itemWithOrderId = new OrderItemEntity(
                         orderItem.getId(),
@@ -136,8 +140,16 @@ public class CreateOrderUseCase {
                         orderItem.getPrice(),
                         orderItem.getCreatedAt()
                     );
-                    orderRepository.saveItem(itemWithOrderId);
+                    OrderItemEntity savedItem = orderRepository.saveItem(itemWithOrderId);
+                    savedItems.add(savedItem);
                 }
+
+                // 이벤트 발행 (트랜잭션 커밋 후 비동기 실행)
+                eventPublisher.publishEvent(new OrderCreatedEvent(
+                    savedOrder.getId(),
+                    savedItems,
+                    savedOrder.getOrderedAt()
+                ));
 
                 return savedOrder;
             });

@@ -1,16 +1,22 @@
 package com.hhplus.ecommerce.application.order;
 
 import com.hhplus.ecommerce.domain.order.OrderEntity;
+import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 import com.hhplus.ecommerce.domain.order.OrderStatus;
+import com.hhplus.ecommerce.domain.order.event.OrderCancelledEvent;
 import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class CancelOrderUseCase {
 
     private final OrderRepository orderRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public OrderEntity execute(long orderId) {
         OrderEntity order = orderRepository.getOrThrow(orderId);
@@ -31,6 +37,18 @@ public class CancelOrderUseCase {
             order.getCreatedAt(),
             now
         );
-        return orderRepository.save(cancelledOrder);
+        OrderEntity savedOrder = orderRepository.save(cancelledOrder);
+
+        // 주문 아이템 조회
+        List<OrderItemEntity> orderItems = orderRepository.findItemsByOrderId(orderId);
+
+        // 이벤트 발행 (트랜잭션 커밋 후 비동기 실행)
+        eventPublisher.publishEvent(new OrderCancelledEvent(
+            savedOrder.getId(),
+            orderItems,
+            savedOrder.getUpdatedAt()
+        ));
+
+        return savedOrder;
     }
 }
