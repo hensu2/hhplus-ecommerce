@@ -57,6 +57,20 @@ tasks.named('test') {
     finalizedBy jacocoTestReport
 }
 
+// 새 쿠폰 테스트만 실행하는 태스크
+task couponTest(type: Test) {
+    useJUnitPlatform {
+        includeTags 'none' // 다른 테스트는 제외
+    }
+    include '**/IssueCouponUseCaseTest.class'
+    include '**/RedisCouponConcurrencyTest.class'
+    include '**/CouponFullFlowIntegrationTest.class'
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
 // Jacoco 설정
 jacoco {
     toolVersion = "0.8.11"

@@ -45,6 +45,7 @@ class CancelOrderUseCaseTest {
             null,
             OrderStatus.PENDING,
             now,
+            now,
             now
         );
     }
@@ -58,24 +59,25 @@ class CancelOrderUseCaseTest {
         long now = System.currentTimeMillis();
         OrderEntity cancelledOrder = new OrderEntity(
             orderId,
-            pendingOrder.userId(),
-            pendingOrder.totalAmount(),
-            pendingOrder.discountAmount(),
-            pendingOrder.finalAmount(),
-            pendingOrder.couponHistoryId(),
+            pendingOrder.getUserId(),
+            pendingOrder.getTotalAmount(),
+            pendingOrder.getDiscountAmount(),
+            pendingOrder.getFinalAmount(),
+            pendingOrder.getCouponHistoryId(),
             OrderStatus.CANCELLED,
-            pendingOrder.createdAt(),
+            pendingOrder.getOrderedAt(),
+            pendingOrder.getCreatedAt(),
             now
         );
         when(orderRepository.save(any(OrderEntity.class))).thenReturn(cancelledOrder);
 
         // when
-        OrderResponse response = cancelOrderUseCase.execute(orderId);
+        OrderEntity result = cancelOrderUseCase.execute(orderId);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.getOrderId()).isEqualTo(orderId);
-        assertThat(response.getStatus()).isEqualTo("CANCELLED");
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(orderId);
+        assertThat(result.getStatus()).isEqualTo(OrderStatus.CANCELLED);
     }
 
     @Test
@@ -103,6 +105,7 @@ class CancelOrderUseCaseTest {
             30000,
             null,
             OrderStatus.CANCELLED,
+            now,
             now,
             now
         );

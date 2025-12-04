@@ -74,17 +74,17 @@ class GetProductUseCaseTest {
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.getId()).isEqualTo(testProduct.id());
-        assertThat(response.getProductName()).isEqualTo(testProduct.productName());
-        assertThat(response.getContent()).isEqualTo(testProduct.content());
-        assertThat(response.getPrice()).isEqualTo((int) testProduct.price());
-        assertThat(response.getOptions()).hasSize(2);
+        assertThat(response.id()).isEqualTo(testProduct.getId());
+        assertThat(response.productName()).isEqualTo(testProduct.getProductName());
+        assertThat(response.content()).isEqualTo(testProduct.getContent());
+        assertThat(response.price()).isEqualTo((int) testProduct.getPrice().longValue());
+        assertThat(response.options()).hasSize(2);
 
-        List<ProductOptionResponse> options = response.getOptions();
-        assertThat(options.get(0).getId()).isEqualTo(1L);
-        assertThat(options.get(0).getOptionType()).isEqualTo("16GB RAM");
-        assertThat(options.get(0).getAdditionalPrice()).isEqualTo(100000);
-        assertThat(options.get(0).getStock()).isEqualTo(50);
+        List<ProductOptionResponse> options = response.options();
+        assertThat(options.get(0).id()).isEqualTo(1L);
+        assertThat(options.get(0).optionType()).isEqualTo("16GB RAM");
+        assertThat(options.get(0).additionalPrice()).isEqualTo(100000);
+        assertThat(options.get(0).stock()).isEqualTo(50);
     }
 
     @Test
@@ -104,9 +104,9 @@ class GetProductUseCaseTest {
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.getId()).isEqualTo(testProduct.id());
-        assertThat(response.getProductName()).isEqualTo(testProduct.productName());
-        assertThat(response.getOptions()).isEmpty();
+        assertThat(response.id()).isEqualTo(testProduct.getId());
+        assertThat(response.productName()).isEqualTo(testProduct.getProductName());
+        assertThat(response.options()).isEmpty();
     }
 
     @Test

@@ -56,22 +56,22 @@ class CancelPaymentUseCaseTest {
         long now = System.currentTimeMillis();
         PaymentEntity cancelledPayment = new PaymentEntity(
             paymentId,
-            completedPayment.orderId(),
-            completedPayment.userId(),
-            completedPayment.amount(),
+            completedPayment.getOrderId(),
+            completedPayment.getUserId(),
+            completedPayment.getAmount(),
             PaymentStatus.CANCELLED,
-            completedPayment.createdAt(),
+            completedPayment.getCreatedAt(),
             now
         );
         when(paymentRepository.save(any(PaymentEntity.class))).thenReturn(cancelledPayment);
 
         // when
-        PaymentResponse response = cancelPaymentUseCase.execute(paymentId);
+        PaymentEntity result = cancelPaymentUseCase.execute(paymentId);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.getPaymentId()).isEqualTo(paymentId);
-        assertThat(response.getStatus()).isEqualTo("CANCELLED");
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(paymentId);
+        assertThat(result.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
     }
 
     @Test

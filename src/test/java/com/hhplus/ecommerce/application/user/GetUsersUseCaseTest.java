@@ -47,17 +47,17 @@ class GetUsersUseCaseTest {
         given(userRepository.findAll()).willReturn(testUsers);
 
         // when
-        List<UserResponse> responses = getUsersUseCase.execute();
+        List<UserEntity> result = getUsersUseCase.execute();
 
         // then
-        assertThat(responses).isNotNull();
-        assertThat(responses).hasSize(3);
-        assertThat(responses.get(0).getId()).isEqualTo(1L);
-        assertThat(responses.get(0).getUsername()).isEqualTo("user1");
-        assertThat(responses.get(1).getId()).isEqualTo(2L);
-        assertThat(responses.get(1).getUsername()).isEqualTo("user2");
-        assertThat(responses.get(2).getId()).isEqualTo(3L);
-        assertThat(responses.get(2).getUsername()).isEqualTo("user3");
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(3);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+        assertThat(result.get(0).getUsername()).isEqualTo("user1");
+        assertThat(result.get(1).getId()).isEqualTo(2L);
+        assertThat(result.get(1).getUsername()).isEqualTo("user2");
+        assertThat(result.get(2).getId()).isEqualTo(3L);
+        assertThat(result.get(2).getUsername()).isEqualTo("user3");
         verify(userRepository).findAll();
     }
 

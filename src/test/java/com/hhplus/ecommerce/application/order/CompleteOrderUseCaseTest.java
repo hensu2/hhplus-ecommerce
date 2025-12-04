@@ -45,6 +45,7 @@ class CompleteOrderUseCaseTest {
             null,
             OrderStatus.PENDING,
             now,
+            now,
             now
         );
     }
@@ -58,24 +59,25 @@ class CompleteOrderUseCaseTest {
         long now = System.currentTimeMillis();
         OrderEntity completedOrder = new OrderEntity(
             orderId,
-            pendingOrder.userId(),
-            pendingOrder.totalAmount(),
-            pendingOrder.discountAmount(),
-            pendingOrder.finalAmount(),
-            pendingOrder.couponHistoryId(),
+            pendingOrder.getUserId(),
+            pendingOrder.getTotalAmount(),
+            pendingOrder.getDiscountAmount(),
+            pendingOrder.getFinalAmount(),
+            pendingOrder.getCouponHistoryId(),
             OrderStatus.COMPLETED,
-            pendingOrder.createdAt(),
+            pendingOrder.getOrderedAt(),
+            pendingOrder.getCreatedAt(),
             now
         );
         when(orderRepository.save(any(OrderEntity.class))).thenReturn(completedOrder);
 
         // when
-        OrderResponse response = completeOrderUseCase.execute(orderId);
+        OrderEntity result = completeOrderUseCase.execute(orderId);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.getOrderId()).isEqualTo(orderId);
-        assertThat(response.getStatus()).isEqualTo("COMPLETED");
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(orderId);
+        assertThat(result.getStatus()).isEqualTo(OrderStatus.COMPLETED);
     }
 
     @Test
@@ -104,6 +106,7 @@ class CompleteOrderUseCaseTest {
             null,
             OrderStatus.COMPLETED,
             now,
+            now,
             now
         );
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(completedOrder));
@@ -127,6 +130,7 @@ class CompleteOrderUseCaseTest {
             30000,
             null,
             OrderStatus.CANCELLED,
+            now,
             now,
             now
         );

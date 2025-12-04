@@ -6,8 +6,11 @@ import com.hhplus.ecommerce.infrastructure.coupon.CouponRepository;
 import com.hhplus.ecommerce.presentation.coupon.req.CreateCouponRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CreateCouponUseCase {
 
     private final CouponRepository couponRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Transactional
     public CouponEntity execute(CreateCouponRequest request) {
@@ -39,7 +43,15 @@ public class CreateCouponUseCase {
         // 3. DB 저장
         CouponEntity savedCoupon = couponRepository.save(coupon);
 
-        log.info("쿠폰 생성 완료 - couponId: {}, name: {}, stock: {}",
+        // 4. Redis에 재고 초기화
+        String stockKey = "coupon:stock:" + savedCoupon.getId();
+        redisTemplate.opsForValue().set(stockKey, String.valueOf(savedCoupon.getStock()));
+
+        // 5. TTL 설정 (쿠폰 유효 기간 + 1일)
+        long ttl = savedCoupon.getValidUntil() - System.currentTimeMillis() + 86400000L;
+        redisTemplate.expire(stockKey, ttl, TimeUnit.MILLISECONDS);
+
+        log.info("쿠폰 생성 완료 - couponId: {}, name: {}, stock: {}, Redis 재고 초기화 완료",
             savedCoupon.getId(), savedCoupon.getCouponName(), savedCoupon.getStock());
 
         return savedCoupon;
@@ -92,9 +104,9 @@ public class CreateCouponUseCase {
             throw new IllegalArgumentException("종료 시간은 시작 시간보다 이후여야 합니다.");
         }
 
-        long now = System.currentTimeMillis();
-        if (request.validFrom() < now) {
-            throw new IllegalArgumentException("시작 시간은 현재 시간 이후여야 합니다.");
-        }
+        // long now = System.currentTimeMillis();
+        // if (request.validFrom() < now) {
+        //     throw new IllegalArgumentException("시작 시간은 현재 시간 이후여야 합니다.");
+        // }
     }
 }

@@ -64,14 +64,13 @@ public class CouponController {
     }
 
     // 쿠폰 발급 (POST /api/coupons/{couponId}/issue)
-    @Operation(summary = "쿠폰 발급", description = "선착순 쿠폰을 발급받습니다. 한정 수량이며, 동시성 제어가 적용됩니다.")
+    @Operation(summary = "쿠폰 발급", description = "선착순 쿠폰을 발급받습니다. 한정 수량이며, 비동기로 처리됩니다. 즉시 202 Accepted 응답을 반환합니다.")
     @PostMapping("/{couponId}/issue")
     public ResponseEntity<IssueCouponResponse> issueCoupon(
             @PathVariable Long couponId,
             @RequestParam Long userId) {
-        var history = issueCouponUseCase.execute(userId, couponId);
-        var coupon = getCouponUseCase.execute(couponId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new IssueCouponResponse(history, coupon));
+        IssueCouponResponse response = issueCouponUseCase.execute(userId, couponId);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
     @Operation(summary = "내 쿠폰 조회", description = "발급받은 쿠폰 목록을 조회합니다.")

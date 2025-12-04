@@ -49,10 +49,10 @@ class GetUserUseCaseTest {
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.getId()).isEqualTo(testUser.id());
-        assertThat(response.getUsername()).isEqualTo(testUser.username());
-        assertThat(response.getPoint()).isEqualTo(testUser.point());
-        assertThat(response.getRole()).isEqualTo(testUser.role());
+        assertThat(response.id()).isEqualTo(testUser.getId());
+        assertThat(response.username()).isEqualTo(testUser.getUsername());
+        assertThat(response.point()).isEqualTo(testUser.getPoint());
+        assertThat(response.role()).isEqualTo(testUser.getRole());
         verify(userRepository).findById(userId);
     }
 

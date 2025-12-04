@@ -102,11 +102,11 @@ class GetMyCouponsUseCaseTest {
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).getCouponId()).isEqualTo(1L);
-        assertThat(result.get(0).getCouponName()).isEqualTo("신규 회원 10% 할인 쿠폰");
-        assertThat(result.get(0).getStatus()).isEqualTo("ISSUED");
-        assertThat(result.get(1).getCouponId()).isEqualTo(2L);
-        assertThat(result.get(1).getStatus()).isEqualTo("USED");
+        assertThat(result.get(0).couponId()).isEqualTo(1L);
+        assertThat(result.get(0).couponName()).isEqualTo("신규 회원 10% 할인 쿠폰");
+        assertThat(result.get(0).status()).isEqualTo("ISSUED");
+        assertThat(result.get(1).couponId()).isEqualTo(2L);
+        assertThat(result.get(1).status()).isEqualTo("USED");
     }
 
     @Test
@@ -122,8 +122,8 @@ class GetMyCouponsUseCaseTest {
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getStatus()).isEqualTo("ISSUED");
-        assertThat(result.get(0).getCouponName()).isEqualTo("신규 회원 10% 할인 쿠폰");
+        assertThat(result.get(0).status()).isEqualTo("ISSUED");
+        assertThat(result.get(0).couponName()).isEqualTo("신규 회원 10% 할인 쿠폰");
     }
 
     @Test
@@ -139,9 +139,9 @@ class GetMyCouponsUseCaseTest {
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getStatus()).isEqualTo("USED");
-        assertThat(result.get(0).getCouponName()).isEqualTo("5000원 할인 쿠폰");
-        assertThat(result.get(0).getUsedAt()).isNotNull();
+        assertThat(result.get(0).status()).isEqualTo("USED");
+        assertThat(result.get(0).couponName()).isEqualTo("5000원 할인 쿠폰");
+        assertThat(result.get(0).usedAt()).isNotNull();
     }
 
     @Test
@@ -171,15 +171,15 @@ class GetMyCouponsUseCaseTest {
         // then
         assertThat(result).hasSize(1);
         CouponResponse response = result.get(0);
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getCouponId()).isEqualTo(1L);
-        assertThat(response.getCouponName()).isEqualTo("신규 회원 10% 할인 쿠폰");
-        assertThat(response.getDiscountType()).isEqualTo("PERCENT");
-        assertThat(response.getDiscountAmount()).isEqualTo(10);
-        assertThat(response.getUseMinAmount()).isEqualTo(10000);
-        assertThat(response.getUseMaxAmount()).isEqualTo(5000);
-        assertThat(response.getStatus()).isEqualTo("ISSUED");
-        assertThat(response.getIssuedAt()).isNotNull();
-        assertThat(response.getUsedAt()).isNull();
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.couponId()).isEqualTo(1L);
+        assertThat(response.couponName()).isEqualTo("신규 회원 10% 할인 쿠폰");
+        assertThat(response.discountType()).isEqualTo("PERCENT");
+        assertThat(response.discountAmount()).isEqualTo(10);
+        assertThat(response.useMinAmount()).isEqualTo(10000);
+        assertThat(response.useMaxAmount()).isEqualTo(5000);
+        assertThat(response.status()).isEqualTo("ISSUED");
+        assertThat(response.issuedAt()).isNotNull();
+        assertThat(response.usedAt()).isNull();
     }
 }
