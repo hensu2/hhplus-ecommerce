@@ -1,11 +1,13 @@
 package com.hhplus.ecommerce.presentation.coupon;
 
+import com.hhplus.ecommerce.application.coupon.CreateCouponUseCase;
 import com.hhplus.ecommerce.application.coupon.GetCouponUseCase;
 import com.hhplus.ecommerce.application.coupon.GetCouponsUseCase;
 import com.hhplus.ecommerce.application.coupon.GetMyCouponsUseCase;
 import com.hhplus.ecommerce.application.coupon.IssueCouponUseCase;
 import com.hhplus.ecommerce.domain.coupon.CouponEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponStatus;
+import com.hhplus.ecommerce.presentation.coupon.req.CreateCouponRequest;
 import com.hhplus.ecommerce.presentation.coupon.req.ValidateCouponRequest;
 import com.hhplus.ecommerce.presentation.coupon.res.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +26,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class CouponController {
 
+    private final CreateCouponUseCase createCouponUseCase;
     private final GetCouponsUseCase getCouponsUseCase;
     private final IssueCouponUseCase issueCouponUseCase;
     private final GetMyCouponsUseCase getMyCouponsUseCase;
@@ -38,6 +41,15 @@ public class CouponController {
             "2024-10-30T00:00:00", "2024-11-30T23:59:59", "ISSUED",
             "2024-10-30T00:00:00", null
         ));
+    }
+
+    // 쿠폰 생성 (POST /api/coupons)
+    @Operation(summary = "쿠폰 생성", description = "관리자가 선착순 쿠폰을 생성합니다.")
+    @PostMapping
+    public ResponseEntity<CreateCouponResponse> createCoupon(@RequestBody CreateCouponRequest request) {
+        CouponEntity coupon = createCouponUseCase.execute(request);
+        CreateCouponResponse response = CreateCouponResponse.from(coupon);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // 쿠폰 목록 조회 (GET /api/coupons)
