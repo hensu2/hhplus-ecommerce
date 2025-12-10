@@ -1,6 +1,7 @@
 package com.hhplus.ecommerce.integration;
 
 import com.hhplus.ecommerce.application.coupon.IssueCouponUseCase;
+import com.hhplus.ecommerce.config.EmbeddedRedisConfig;
 import com.hhplus.ecommerce.domain.coupon.CouponEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
 import com.hhplus.ecommerce.domain.coupon.DiscountType;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +24,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
+@ContextConfiguration(initializers = EmbeddedRedisConfig.class)
 @DisplayName("쿠폰 발급 전체 플로우 통합 테스트")
 class CouponFullFlowIntegrationTest {
 

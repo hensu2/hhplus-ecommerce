@@ -1,5 +1,6 @@
 package com.hhplus.ecommerce.infrastructure.salesRanking;
 
+import com.hhplus.ecommerce.config.EmbeddedRedisConfig;
 import com.hhplus.ecommerce.domain.salesRanking.SalesRankingItem;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@ContextConfiguration(initializers = EmbeddedRedisConfig.class)
 class SalesRankingRepositoryImplTest {
 
     @Autowired

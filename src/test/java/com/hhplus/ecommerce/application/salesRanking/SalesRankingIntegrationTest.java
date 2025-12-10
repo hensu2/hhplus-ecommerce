@@ -2,13 +2,14 @@ package com.hhplus.ecommerce.application.salesRanking;
 
 import com.hhplus.ecommerce.application.order.CancelOrderUseCase;
 import com.hhplus.ecommerce.application.order.CreateOrderUseCase;
+import com.hhplus.ecommerce.config.EmbeddedRedisConfig;
 import com.hhplus.ecommerce.domain.order.OrderEntity;
 import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
-import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
-import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
+import com.hhplus.ecommerce.infrastructure.product.jpa.ProductJpaRepository;
+import com.hhplus.ecommerce.infrastructure.productOption.jpa.ProductOptionJpaRepository;
 import com.hhplus.ecommerce.infrastructure.salesRanking.SalesRankingRepository;
 import com.hhplus.ecommerce.presentation.order.req.CreateOrderRequest;
 import com.hhplus.ecommerce.presentation.order.req.OrderItemRequest;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -30,6 +32,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
+@ContextConfiguration(initializers = EmbeddedRedisConfig.class)
+@org.springframework.test.annotation.DirtiesContext(classMode = org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class SalesRankingIntegrationTest {
 
     @Autowired
@@ -45,10 +49,10 @@ class SalesRankingIntegrationTest {
     private SalesRankingRepository salesRankingRepository;
 
     @Autowired
-    private ProductRepository productRepository;
+    private ProductJpaRepository productJpaRepository;
 
     @Autowired
-    private ProductOptionRepository productOptionRepository;
+    private ProductOptionJpaRepository productOptionJpaRepository;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -65,18 +69,18 @@ class SalesRankingIntegrationTest {
     void setUp() {
         // 테스트용 상품 생성
         long now = System.currentTimeMillis();
-        testProduct1 = productRepository.save(
-            new ProductEntity(0L, "테스트상품1", 10000L, 1000L, now)
+        testProduct1 = productJpaRepository.save(
+            new ProductEntity(0L, 1L, "테스트상품1", null, 10000L, now, now)
         );
-        testProduct2 = productRepository.save(
-            new ProductEntity(0L, "테스트상품2", 20000L, 2000L, now)
+        testProduct2 = productJpaRepository.save(
+            new ProductEntity(0L, 1L, "테스트상품2", null, 20000L, now, now)
         );
 
-        testOption1 = productOptionRepository.save(
-            new ProductOptionEntity(0L, testProduct1.getId(), "옵션1", 0L, 1000L, now)
+        testOption1 = productOptionJpaRepository.save(
+            new ProductOptionEntity(0L, testProduct1.getId(), "옵션1", 0L, 1000L, now, now)
         );
-        testOption2 = productOptionRepository.save(
-            new ProductOptionEntity(0L, testProduct2.getId(), "옵션2", 0L, 2000L, now)
+        testOption2 = productOptionJpaRepository.save(
+            new ProductOptionEntity(0L, testProduct2.getId(), "옵션2", 0L, 2000L, now, now)
         );
     }
 
@@ -88,15 +92,8 @@ class SalesRankingIntegrationTest {
             redisTemplate.delete(keys);
         }
 
-        // DB 테스트 데이터 정리
-        try {
-            if (testOption1 != null) productOptionRepository.delete(testOption1.getId());
-            if (testOption2 != null) productOptionRepository.delete(testOption2.getId());
-            if (testProduct1 != null) productRepository.delete(testProduct1.getId());
-            if (testProduct2 != null) productRepository.delete(testProduct2.getId());
-        } catch (Exception e) {
-            // 정리 실패는 무시
-        }
+        // DB 테스트 데이터 정리는 @Transactional이나 @DirtiesContext로 처리
+        // 수동으로 delete 메서드가 없으므로 생략
     }
 
     @Test
@@ -139,12 +136,7 @@ class SalesRankingIntegrationTest {
         assertThat(response.getRankings().get(1).getProductId()).isEqualTo(testProduct1.getId());
         assertThat(response.getRankings().get(1).getSalesCount()).isEqualTo(3L);
 
-        // 정리
-        List<OrderItemEntity> items = orderRepository.findItemsByOrderId(order.getId());
-        for (OrderItemEntity item : items) {
-            orderRepository.deleteItem(item.getId());
-        }
-        orderRepository.delete(order.getId());
+        // 정리는 @Transactional 또는 테스트 프레임워크에 위임
     }
 
     @Test
@@ -181,12 +173,7 @@ class SalesRankingIntegrationTest {
                 assertThat(score).isEqualTo(0.0);
             });
 
-        // 정리
-        List<OrderItemEntity> items = orderRepository.findItemsByOrderId(order.getId());
-        for (OrderItemEntity item : items) {
-            orderRepository.deleteItem(item.getId());
-        }
-        orderRepository.delete(order.getId());
+        // 정리는 @Transactional 또는 테스트 프레임워크에 위임
     }
 
     @Test
@@ -236,13 +223,6 @@ class SalesRankingIntegrationTest {
         assertThat(response.getRankings().get(1).getSalesCount()).isEqualTo(8L);
         assertThat(response.getRankings().get(1).getRank()).isEqualTo(2L);
 
-        // 정리
-        for (OrderEntity order : List.of(order1, order2, order3)) {
-            List<OrderItemEntity> items = orderRepository.findItemsByOrderId(order.getId());
-            for (OrderItemEntity item : items) {
-                orderRepository.deleteItem(item.getId());
-            }
-            orderRepository.delete(order.getId());
-        }
+        // 정리는 @Transactional 또는 테스트 프레임워크에 위임
     }
 }

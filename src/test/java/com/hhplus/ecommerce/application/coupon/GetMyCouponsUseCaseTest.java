@@ -5,7 +5,6 @@ import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponStatus;
 import com.hhplus.ecommerce.domain.coupon.DiscountType;
 import com.hhplus.ecommerce.infrastructure.coupon.CouponRepository;
-import com.hhplus.ecommerce.presentation.coupon.res.CouponResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -94,19 +93,16 @@ class GetMyCouponsUseCaseTest {
         // given
         when(couponRepository.findHistoriesByUserId(userId))
             .thenReturn(Arrays.asList(issuedHistory, usedHistory));
-        when(couponRepository.findById(1L)).thenReturn(Optional.of(testCoupon1));
-        when(couponRepository.findById(2L)).thenReturn(Optional.of(testCoupon2));
 
         // when
-        List<CouponResponse> result = getMyCouponsUseCase.execute(userId, null);
+        List<CouponHistoryEntity> result = getMyCouponsUseCase.execute(userId, null);
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).couponId()).isEqualTo(1L);
-        assertThat(result.get(0).couponName()).isEqualTo("신규 회원 10% 할인 쿠폰");
-        assertThat(result.get(0).status()).isEqualTo("ISSUED");
-        assertThat(result.get(1).couponId()).isEqualTo(2L);
-        assertThat(result.get(1).status()).isEqualTo("USED");
+        assertThat(result.get(0).getCouponId()).isEqualTo(1L);
+        assertThat(result.get(0).getStatus()).isEqualTo(CouponStatus.ISSUED);
+        assertThat(result.get(1).getCouponId()).isEqualTo(2L);
+        assertThat(result.get(1).getStatus()).isEqualTo(CouponStatus.USED);
     }
 
     @Test
@@ -115,15 +111,14 @@ class GetMyCouponsUseCaseTest {
         // given
         when(couponRepository.findHistoriesByUserId(userId))
             .thenReturn(Arrays.asList(issuedHistory, usedHistory));
-        when(couponRepository.findById(1L)).thenReturn(Optional.of(testCoupon1));
 
         // when
-        List<CouponResponse> result = getMyCouponsUseCase.execute(userId, CouponStatus.ISSUED);
+        List<CouponHistoryEntity> result = getMyCouponsUseCase.execute(userId, CouponStatus.ISSUED);
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).status()).isEqualTo("ISSUED");
-        assertThat(result.get(0).couponName()).isEqualTo("신규 회원 10% 할인 쿠폰");
+        assertThat(result.get(0).getStatus()).isEqualTo(CouponStatus.ISSUED);
+        assertThat(result.get(0).getCouponId()).isEqualTo(1L);
     }
 
     @Test
@@ -132,16 +127,15 @@ class GetMyCouponsUseCaseTest {
         // given
         when(couponRepository.findHistoriesByUserId(userId))
             .thenReturn(Arrays.asList(issuedHistory, usedHistory));
-        when(couponRepository.findById(2L)).thenReturn(Optional.of(testCoupon2));
 
         // when
-        List<CouponResponse> result = getMyCouponsUseCase.execute(userId, CouponStatus.USED);
+        List<CouponHistoryEntity> result = getMyCouponsUseCase.execute(userId, CouponStatus.USED);
 
         // then
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).status()).isEqualTo("USED");
-        assertThat(result.get(0).couponName()).isEqualTo("5000원 할인 쿠폰");
-        assertThat(result.get(0).usedAt()).isNotNull();
+        assertThat(result.get(0).getStatus()).isEqualTo(CouponStatus.USED);
+        assertThat(result.get(0).getCouponId()).isEqualTo(2L);
+        assertThat(result.get(0).getUsedAt()).isNotNull();
     }
 
     @Test
@@ -151,35 +145,30 @@ class GetMyCouponsUseCaseTest {
         when(couponRepository.findHistoriesByUserId(userId)).thenReturn(List.of());
 
         // when
-        List<CouponResponse> result = getMyCouponsUseCase.execute(userId, null);
+        List<CouponHistoryEntity> result = getMyCouponsUseCase.execute(userId, null);
 
         // then
         assertThat(result).isEmpty();
     }
 
     @Test
-    @DisplayName("쿠폰 응답에 모든 필드가 올바르게 매핑된다")
+    @DisplayName("쿠폰 이력 엔티티에 모든 필드가 올바르게 조회된다")
     void getMyCouponsResponseFields() {
         // given
         when(couponRepository.findHistoriesByUserId(userId))
             .thenReturn(Arrays.asList(issuedHistory));
-        when(couponRepository.findById(1L)).thenReturn(Optional.of(testCoupon1));
 
         // when
-        List<CouponResponse> result = getMyCouponsUseCase.execute(userId, null);
+        List<CouponHistoryEntity> result = getMyCouponsUseCase.execute(userId, null);
 
         // then
         assertThat(result).hasSize(1);
-        CouponResponse response = result.get(0);
-        assertThat(response.id()).isEqualTo(1L);
-        assertThat(response.couponId()).isEqualTo(1L);
-        assertThat(response.couponName()).isEqualTo("신규 회원 10% 할인 쿠폰");
-        assertThat(response.discountType()).isEqualTo("PERCENT");
-        assertThat(response.discountAmount()).isEqualTo(10);
-        assertThat(response.useMinAmount()).isEqualTo(10000);
-        assertThat(response.useMaxAmount()).isEqualTo(5000);
-        assertThat(response.status()).isEqualTo("ISSUED");
-        assertThat(response.issuedAt()).isNotNull();
-        assertThat(response.usedAt()).isNull();
+        CouponHistoryEntity history = result.get(0);
+        assertThat(history.getId()).isEqualTo(1L);
+        assertThat(history.getCouponId()).isEqualTo(1L);
+        assertThat(history.getUserId()).isEqualTo(userId);
+        assertThat(history.getStatus()).isEqualTo(CouponStatus.ISSUED);
+        assertThat(history.getIssuedAt()).isNotNull();
+        assertThat(history.getUsedAt()).isNull();
     }
 }

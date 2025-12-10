@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.infrastructure.product;
 
 import com.hhplus.ecommerce.domain.product.ProductEntity;
-import com.hhplus.ecommerce.infrastructure.product.memory.ProductTable;
+import com.hhplus.ecommerce.infrastructure.product.jpa.ProductJpaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verify;
 class ProductRepositoryImplTest {
 
     @Mock
-    private ProductTable productTable;
+    private ProductJpaRepository productJpaRepository;
 
     @InjectMocks
     private ProductRepositoryImpl productRepository;
@@ -37,7 +37,7 @@ class ProductRepositoryImplTest {
             new ProductEntity(2L, 1L, "키보드", "기계식 키보드", 120000L, timestamp, timestamp),
             new ProductEntity(3L, 1L, "마우스", "게이밍 마우스", 85000L, timestamp, timestamp)
         );
-        given(productTable.findAll()).willReturn(products);
+        given(productJpaRepository.findAll()).willReturn(products);
 
         // when
         List<ProductEntity> result = productRepository.findAll();
@@ -46,14 +46,14 @@ class ProductRepositoryImplTest {
         assertThat(result).isNotNull();
         assertThat(result).hasSize(3);
         assertThat(result).isEqualTo(products);
-        verify(productTable).findAll();
+        verify(productJpaRepository).findAll();
     }
 
     @Test
     @DisplayName("상품이 없을 경우 빈 리스트를 반환한다")
     void findAll_NoProducts_ReturnsEmptyList() {
         // given
-        given(productTable.findAll()).willReturn(List.of());
+        given(productJpaRepository.findAll()).willReturn(List.of());
 
         // when
         List<ProductEntity> result = productRepository.findAll();
@@ -61,7 +61,7 @@ class ProductRepositoryImplTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result).isEmpty();
-        verify(productTable).findAll();
+        verify(productJpaRepository).findAll();
     }
 
     @Test
@@ -71,7 +71,7 @@ class ProductRepositoryImplTest {
         long timestamp = System.currentTimeMillis();
         Long productId = 1L;
         ProductEntity product = new ProductEntity(1L, 1L, "노트북", "고성능 노트북", 890000L, timestamp, timestamp);
-        given(productTable.findById(productId)).willReturn(Optional.of(product));
+        given(productJpaRepository.findById(productId)).willReturn(Optional.of(product));
 
         // when
         Optional<ProductEntity> result = productRepository.findById(productId);
@@ -79,7 +79,7 @@ class ProductRepositoryImplTest {
         // then
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(product);
-        verify(productTable).findById(productId);
+        verify(productJpaRepository).findById(productId);
     }
 
     @Test
@@ -87,13 +87,13 @@ class ProductRepositoryImplTest {
     void findById_NonExistingProduct_ReturnsEmpty() {
         // given
         Long productId = 999L;
-        given(productTable.findById(productId)).willReturn(Optional.empty());
+        given(productJpaRepository.findById(productId)).willReturn(Optional.empty());
 
         // when
         Optional<ProductEntity> result = productRepository.findById(productId);
 
         // then
         assertThat(result).isEmpty();
-        verify(productTable).findById(productId);
+        verify(productJpaRepository).findById(productId);
     }
 }

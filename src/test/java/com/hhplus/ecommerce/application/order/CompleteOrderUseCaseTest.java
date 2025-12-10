@@ -3,7 +3,6 @@ package com.hhplus.ecommerce.application.order;
 import com.hhplus.ecommerce.domain.order.OrderEntity;
 import com.hhplus.ecommerce.domain.order.OrderStatus;
 import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
-import com.hhplus.ecommerce.presentation.order.res.OrderResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,8 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -54,7 +51,7 @@ class CompleteOrderUseCaseTest {
     @DisplayName("주문 완료에 성공한다")
     void completeOrder() {
         // given
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(pendingOrder));
+        when(orderRepository.getOrThrow(orderId)).thenReturn(pendingOrder);
 
         long now = System.currentTimeMillis();
         OrderEntity completedOrder = new OrderEntity(
@@ -84,12 +81,13 @@ class CompleteOrderUseCaseTest {
     @DisplayName("존재하지 않는 주문 ID로 완료 시도 시 예외를 발생시킨다")
     void completeOrderWithInvalidId() {
         // given
-        when(orderRepository.findById(999L)).thenReturn(Optional.empty());
+        when(orderRepository.getOrThrow(999L))
+            .thenThrow(new IllegalArgumentException("주문을 찾을 수 없습니다."));
 
         // when & then
         assertThatThrownBy(() -> completeOrderUseCase.execute(999L))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("주문 정보를 찾을 수 없습니다.");
+            .hasMessage("주문을 찾을 수 없습니다.");
     }
 
     @Test
@@ -109,7 +107,7 @@ class CompleteOrderUseCaseTest {
             now,
             now
         );
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(completedOrder));
+        when(orderRepository.getOrThrow(orderId)).thenReturn(completedOrder);
 
         // when & then
         assertThatThrownBy(() -> completeOrderUseCase.execute(orderId))
@@ -134,7 +132,7 @@ class CompleteOrderUseCaseTest {
             now,
             now
         );
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(cancelledOrder));
+        when(orderRepository.getOrThrow(orderId)).thenReturn(cancelledOrder);
 
         // when & then
         assertThatThrownBy(() -> completeOrderUseCase.execute(orderId))

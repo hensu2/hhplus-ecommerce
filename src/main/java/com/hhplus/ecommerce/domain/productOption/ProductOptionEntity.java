@@ -56,6 +56,7 @@ public class ProductOptionEntity {
         };
 
         this.stock = newStock;
+        this.updatedAt = System.currentTimeMillis();
         return this;
     }
 }

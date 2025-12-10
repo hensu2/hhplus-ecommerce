@@ -1419,6 +1419,13 @@ public void processPendingIssues() {
 | **HGETALL** | Hash 전체 조회 | O(N) | `HGETALL pending:1` |
 | **EXPIRE** | TTL 설정 | O(1) | `EXPIRE stock:1 86400` |
 
+### B. 참고 자료
+
+- [Redis 공식 문서](https://redis.io/docs/)
+- [Redisson 분산 락 가이드](https://github.com/redisson/redisson/wiki/8.-Distributed-locks-and-synchronizers)
+- [Spring Data Redis](https://spring.io/projects/spring-data-redis)
+- [선착순 이벤트 설계 베스트 프랙티스](https://www.redis.com/blog/redis-lua-scripts-for-atomic-operations/)
+
 ---
 
 **작성자:** Claude Code

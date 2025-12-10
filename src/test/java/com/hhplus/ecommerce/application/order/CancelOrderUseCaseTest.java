@@ -11,7 +11,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,6 +26,9 @@ class CancelOrderUseCaseTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private CancelOrderUseCase cancelOrderUseCase;
@@ -54,7 +59,8 @@ class CancelOrderUseCaseTest {
     @DisplayName("주문 취소에 성공한다")
     void cancelOrder() {
         // given
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(pendingOrder));
+        when(orderRepository.getOrThrow(orderId)).thenReturn(pendingOrder);
+        when(orderRepository.findItemsByOrderId(orderId)).thenReturn(Collections.emptyList());
 
         long now = System.currentTimeMillis();
         OrderEntity cancelledOrder = new OrderEntity(
@@ -84,12 +90,13 @@ class CancelOrderUseCaseTest {
     @DisplayName("존재하지 않는 주문 ID로 취소 시도 시 예외를 발생시킨다")
     void cancelOrderWithInvalidId() {
         // given
-        when(orderRepository.findById(999L)).thenReturn(Optional.empty());
+        when(orderRepository.getOrThrow(999L))
+            .thenThrow(new IllegalArgumentException("주문을 찾을 수 없습니다."));
 
         // when & then
         assertThatThrownBy(() -> cancelOrderUseCase.execute(999L))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("주문 정보를 찾을 수 없습니다.");
+            .hasMessage("주문을 찾을 수 없습니다.");
     }
 
     @Test
@@ -109,7 +116,7 @@ class CancelOrderUseCaseTest {
             now,
             now
         );
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(cancelledOrder));
+        when(orderRepository.getOrThrow(orderId)).thenReturn(cancelledOrder);
 
         // when & then
         assertThatThrownBy(() -> cancelOrderUseCase.execute(orderId))

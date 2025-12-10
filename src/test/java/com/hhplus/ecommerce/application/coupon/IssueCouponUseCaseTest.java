@@ -1,9 +1,11 @@
 package com.hhplus.ecommerce.application.coupon;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hhplus.ecommerce.config.EmbeddedRedisConfig;
 import com.hhplus.ecommerce.domain.coupon.CouponEntity;
 import com.hhplus.ecommerce.domain.coupon.DiscountType;
 import com.hhplus.ecommerce.infrastructure.coupon.CouponRepository;
+import com.hhplus.ecommerce.infrastructure.coupon.jpa.CouponHistoryJpaRepository;
 import com.hhplus.ecommerce.presentation.coupon.res.IssueCouponResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,10 +13,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
+@ContextConfiguration(initializers = EmbeddedRedisConfig.class)
 @DisplayName("Redis 기반 쿠폰 발급 단위 테스트")
 class IssueCouponUseCaseTest {
 
@@ -29,6 +34,9 @@ class IssueCouponUseCaseTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private CouponHistoryJpaRepository couponHistoryJpaRepository;
 
     @BeforeEach
     void setUp() {
@@ -157,15 +165,18 @@ class IssueCouponUseCaseTest {
             assertThat(response.getStatus()).isEqualTo("PENDING");
         }
 
-        // then
+        // then - Redis 상태 확인
+        // 재고가 모두 소진되었는지 확인
         String stock = redisTemplate.opsForValue().get("coupon:stock:" + couponId);
         assertThat(stock).isEqualTo("0");
 
-        Long queueSize = redisTemplate.opsForList().size("coupon:issue:queue:" + couponId);
-        assertThat(queueSize).isEqualTo(10);
-
+        // 발급 완료된 사용자 수 확인 (Redis Set)
         Long issuedCount = redisTemplate.opsForSet().size("coupon:issued:" + couponId);
         assertThat(issuedCount).isEqualTo(10);
+
+        // 큐에 10개 요청이 추가되었는지 확인 (워커 처리 전 또는 처리 중)
+        // 워커가 비동기로 처리하므로 큐는 이미 비워질 수 있음
+        // 따라서 queueSize 체크는 생략하고 issuedCount로 대체
     }
 
     // Helper methods

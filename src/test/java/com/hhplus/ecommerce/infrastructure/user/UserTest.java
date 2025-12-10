@@ -63,11 +63,11 @@ class UserTest {
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getUsername()).isEqualTo("testuser");
-        assertThat(response.getPoint()).isEqualTo(50000L);
-        assertThat(response.getRole()).isEqualTo("USER");
-        assertThat(response.getCreatedAt()).isEqualTo(timestamp);
-        assertThat(response.getUpdatedAt()).isEqualTo(timestamp);
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.username()).isEqualTo("testuser");
+        assertThat(response.point()).isEqualTo(50000L);
+        assertThat(response.role()).isEqualTo("USER");
+        assertThat(response.createdAt()).isEqualTo(timestamp);
+        assertThat(response.updatedAt()).isEqualTo(timestamp);
     }
 }

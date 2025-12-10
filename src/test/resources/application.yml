@@ -27,6 +27,33 @@ spring:
         use_sql_comments: true
     open-in-view: false
 
+  # Redis Configuration for Test
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 10
+          min-idle: 2
+          max-wait: -1ms
+
+# Redisson Configuration for Test
+spring.redis.redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://localhost:6379"
+      connectionPoolSize: 64
+      connectionMinimumIdleSize: 10
+      idleConnectionTimeout: 10000
+      connectTimeout: 10000
+      timeout: 3000
+      retryAttempts: 3
+      retryInterval: 1500
+
 # Logging
 logging:
   level:

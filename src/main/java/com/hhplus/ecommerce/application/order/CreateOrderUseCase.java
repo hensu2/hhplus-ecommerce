@@ -59,12 +59,13 @@ public class CreateOrderUseCase {
 
         // MultiLock: 모든 락을 원자적으로 획득 (Pub/Sub 기반)
         RLock multiLock = redissonClient.getMultiLock(locks.toArray(new RLock[0]));
+        boolean lockAcquired = false;
 
         try {
             // 1. 락 획득 (트랜잭션 외부)
-            boolean acquired = multiLock.tryLock(10, 5, TimeUnit.SECONDS);
+            lockAcquired = multiLock.tryLock(10, 5, TimeUnit.SECONDS);
 
-            if (!acquired) {
+            if (!lockAcquired) {
                 throw new RuntimeException("주문 처리 중입니다. 잠시 후 다시 시도해주세요.");
             }
 
@@ -159,8 +160,12 @@ public class CreateOrderUseCase {
             throw new RuntimeException("주문 처리 중 오류가 발생했습니다.", e);
         } finally {
             // 3. 트랜잭션 커밋 후 락 해제
-            if (multiLock.isHeldByCurrentThread()) {
-                multiLock.unlock();
+            if (lockAcquired) {
+                try {
+                    multiLock.unlock();
+                } catch (IllegalMonitorStateException e) {
+                    // 락이 이미 해제된 경우 무시
+                }
             }
         }
     }

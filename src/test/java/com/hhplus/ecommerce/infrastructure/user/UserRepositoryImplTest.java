@@ -1,7 +1,7 @@
 package com.hhplus.ecommerce.infrastructure.user;
 
 import com.hhplus.ecommerce.domain.user.UserEntity;
-import com.hhplus.ecommerce.infrastructure.user.memory.UserTable;
+import com.hhplus.ecommerce.infrastructure.user.jpa.UserJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.verify;
 class UserRepositoryImplTest {
 
     @Mock
-    private UserTable userTable;
+    private UserJpaRepository userJpaRepository;
 
     @InjectMocks
     private UserRepositoryImpl userRepository;
@@ -41,7 +41,7 @@ class UserRepositoryImplTest {
     void findById_ExistingUser_ReturnsUser() {
         // given
         Long userId = 1L;
-        given(userTable.findById(userId)).willReturn(Optional.of(testUser));
+        given(userJpaRepository.findById(userId)).willReturn(Optional.of(testUser));
 
         // when
         Optional<UserEntity> result = userRepository.findById(userId);
@@ -49,7 +49,7 @@ class UserRepositoryImplTest {
         // then
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(testUser);
-        verify(userTable).findById(userId);
+        verify(userJpaRepository).findById(userId);
     }
 
     @Test
@@ -57,14 +57,14 @@ class UserRepositoryImplTest {
     void findById_NonExistingUser_ReturnsEmpty() {
         // given
         Long userId = 999L;
-        given(userTable.findById(userId)).willReturn(Optional.empty());
+        given(userJpaRepository.findById(userId)).willReturn(Optional.empty());
 
         // when
         Optional<UserEntity> result = userRepository.findById(userId);
 
         // then
         assertThat(result).isEmpty();
-        verify(userTable).findById(userId);
+        verify(userJpaRepository).findById(userId);
     }
 
     @Test
@@ -77,7 +77,7 @@ class UserRepositoryImplTest {
             new UserEntity(2L, "user2", 100000L, "ADMIN", timestamp, timestamp),
             new UserEntity(3L, "user3", 30000L, "USER", timestamp, timestamp)
         );
-        given(userTable.findAll()).willReturn(users);
+        given(userJpaRepository.findAll()).willReturn(users);
 
         // when
         List<UserEntity> result = userRepository.findAll();
@@ -86,14 +86,14 @@ class UserRepositoryImplTest {
         assertThat(result).isNotNull();
         assertThat(result).hasSize(3);
         assertThat(result).isEqualTo(users);
-        verify(userTable).findAll();
+        verify(userJpaRepository).findAll();
     }
 
     @Test
     @DisplayName("사용자가 없을 경우 빈 리스트를 반환한다")
     void findAll_NoUsers_ReturnsEmptyList() {
         // given
-        given(userTable.findAll()).willReturn(List.of());
+        given(userJpaRepository.findAll()).willReturn(List.of());
 
         // when
         List<UserEntity> result = userRepository.findAll();
@@ -101,7 +101,7 @@ class UserRepositoryImplTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result).isEmpty();
-        verify(userTable).findAll();
+        verify(userJpaRepository).findAll();
     }
 
     @Test
@@ -111,17 +111,17 @@ class UserRepositoryImplTest {
         long timestamp = System.currentTimeMillis();
         UserEntity newUser = new UserEntity(0L, "newuser", 10000L, "USER", 0L, 0L);
         UserEntity savedUser = new UserEntity(4L, "newuser", 10000L, "USER", timestamp, timestamp);
-        given(userTable.save(newUser)).willReturn(savedUser);
+        given(userJpaRepository.save(newUser)).willReturn(savedUser);
 
         // when
         UserEntity result = userRepository.save(newUser);
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.id()).isEqualTo(4L);
-        assertThat(result.username()).isEqualTo("newuser");
-        assertThat(result.point()).isEqualTo(10000L);
-        assertThat(result.role()).isEqualTo("USER");
-        verify(userTable).save(newUser);
+        assertThat(result.getId()).isEqualTo(4L);
+        assertThat(result.getUsername()).isEqualTo("newuser");
+        assertThat(result.getPoint()).isEqualTo(10000L);
+        assertThat(result.getRole()).isEqualTo("USER");
+        verify(userJpaRepository).save(newUser);
     }
 }

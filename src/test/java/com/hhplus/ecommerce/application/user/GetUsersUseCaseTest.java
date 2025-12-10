@@ -2,7 +2,6 @@ package com.hhplus.ecommerce.application.user;
 
 import com.hhplus.ecommerce.domain.user.UserEntity;
 import com.hhplus.ecommerce.infrastructure.user.UserRepository;
-import com.hhplus.ecommerce.presentation.user.res.UserResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -68,11 +67,11 @@ class GetUsersUseCaseTest {
         given(userRepository.findAll()).willReturn(List.of());
 
         // when
-        List<UserResponse> responses = getUsersUseCase.execute();
+        List<UserEntity> result = getUsersUseCase.execute();
 
         // then
-        assertThat(responses).isNotNull();
-        assertThat(responses).isEmpty();
+        assertThat(result).isNotNull();
+        assertThat(result).isEmpty();
         verify(userRepository).findAll();
     }
 }

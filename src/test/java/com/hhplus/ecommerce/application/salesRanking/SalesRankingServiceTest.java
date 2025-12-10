@@ -82,8 +82,8 @@ class SalesRankingServiceTest {
             new SalesRankingItem(2, 102L, 30L)
         );
 
-        ProductEntity product1 = new ProductEntity(101L, "상품1", 10000L, 100L, System.currentTimeMillis());
-        ProductEntity product2 = new ProductEntity(102L, "상품2", 20000L, 200L, System.currentTimeMillis());
+        ProductEntity product1 = new ProductEntity(101L, 1L, "상품1", null, 10000L, System.currentTimeMillis(), System.currentTimeMillis());
+        ProductEntity product2 = new ProductEntity(102L, 1L, "상품2", null, 20000L, System.currentTimeMillis(), System.currentTimeMillis());
 
         when(salesRankingRepository.getRankingWithScores(anyString(), eq(0L), eq(9L)))
             .thenReturn(mockRankings);
@@ -116,8 +116,8 @@ class SalesRankingServiceTest {
             new SalesRankingItem(2, 102L, 300L)
         );
 
-        ProductEntity product1 = new ProductEntity(101L, "상품1", 10000L, 100L, System.currentTimeMillis());
-        ProductEntity product2 = new ProductEntity(102L, "상품2", 20000L, 200L, System.currentTimeMillis());
+        ProductEntity product1 = new ProductEntity(101L, 1L, "상품1", null, 10000L, System.currentTimeMillis(), System.currentTimeMillis());
+        ProductEntity product2 = new ProductEntity(102L, 1L, "상품2", null, 20000L, System.currentTimeMillis(), System.currentTimeMillis());
 
         when(salesRankingRepository.getRankingWithScores(anyString(), eq(0L), eq(9L)))
             .thenReturn(mockRankings);

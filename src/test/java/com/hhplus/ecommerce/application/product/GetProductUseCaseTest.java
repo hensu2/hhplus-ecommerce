@@ -5,11 +5,7 @@ import com.hhplus.ecommerce.common.exception.ProductNotFoundException;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
 import com.hhplus.ecommerce.domain.product.ProductStatisticsEntity;
 import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
-import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.infrastructure.product.ProductStatisticsRepository;
-import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
-import com.hhplus.ecommerce.presentation.product.res.ProductDetailResponse;
-import com.hhplus.ecommerce.presentation.product.res.ProductOptionResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,8 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -35,78 +29,59 @@ class GetProductUseCaseTest {
     private ProductRepository productRepository;
 
     @Mock
-    private ProductOptionRepository productOptionRepository;
-
-    @Mock
     private ProductStatisticsRepository productStatisticsRepository;
 
     @InjectMocks
     private GetProductUseCase getProductUseCase;
 
     private ProductEntity testProduct;
-    private List<ProductOptionEntity> testOptions;
 
     @BeforeEach
     void setUp() {
         long timestamp = System.currentTimeMillis();
         testProduct = new ProductEntity(1L, 1L, "노트북", "고성능 노트북", 890000L, timestamp, timestamp);
-
-        testOptions = Arrays.asList(
-            new ProductOptionEntity(1L, 1L, "16GB RAM", 100000L, 50L, timestamp, timestamp),
-            new ProductOptionEntity(2L, 1L, "32GB RAM", 200000L, 30L, timestamp, timestamp)
-        );
     }
 
     @Test
-    @DisplayName("유효한 상품 ID로 상품 상세 정보를 조회한다")
-    void execute_ValidProductId_ReturnsProductDetail() {
+    @DisplayName("유효한 상품 ID로 상품 정보를 조회한다")
+    void execute_ValidProductId_ReturnsProduct() {
         // given
         Long productId = 1L;
         ProductStatisticsEntity existingStats = new ProductStatisticsEntity(productId, 10L, 5L, System.currentTimeMillis());
 
-        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
-        when(productOptionRepository.findByProductId(productId)).thenReturn(testOptions);
+        when(productRepository.getOrThrow(productId)).thenReturn(testProduct);
         when(productStatisticsRepository.findByProductId(productId)).thenReturn(Optional.of(existingStats));
         when(productStatisticsRepository.save(any())).thenReturn(existingStats);
 
         // when
-        ProductDetailResponse response = getProductUseCase.execute(productId);
+        ProductEntity result = getProductUseCase.execute(productId);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.id()).isEqualTo(testProduct.getId());
-        assertThat(response.productName()).isEqualTo(testProduct.getProductName());
-        assertThat(response.content()).isEqualTo(testProduct.getContent());
-        assertThat(response.price()).isEqualTo((int) testProduct.getPrice().longValue());
-        assertThat(response.options()).hasSize(2);
-
-        List<ProductOptionResponse> options = response.options();
-        assertThat(options.get(0).id()).isEqualTo(1L);
-        assertThat(options.get(0).optionType()).isEqualTo("16GB RAM");
-        assertThat(options.get(0).additionalPrice()).isEqualTo(100000);
-        assertThat(options.get(0).stock()).isEqualTo(50);
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(testProduct.getId());
+        assertThat(result.getProductName()).isEqualTo(testProduct.getProductName());
+        assertThat(result.getContent()).isEqualTo(testProduct.getContent());
+        assertThat(result.getPrice()).isEqualTo(testProduct.getPrice());
     }
 
     @Test
-    @DisplayName("옵션이 없는 상품의 상세 정보를 조회한다")
-    void execute_ProductWithNoOptions_ReturnsProductDetailWithEmptyOptions() {
+    @DisplayName("상품 조회 시 조회수가 증가한다")
+    void execute_ProductView_IncreasesViewCount() {
         // given
         Long productId = 1L;
         ProductStatisticsEntity existingStats = new ProductStatisticsEntity(productId, 10L, 5L, System.currentTimeMillis());
 
-        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
-        when(productOptionRepository.findByProductId(productId)).thenReturn(List.of());
+        when(productRepository.getOrThrow(productId)).thenReturn(testProduct);
         when(productStatisticsRepository.findByProductId(productId)).thenReturn(Optional.of(existingStats));
         when(productStatisticsRepository.save(any())).thenReturn(existingStats);
 
         // when
-        ProductDetailResponse response = getProductUseCase.execute(productId);
+        ProductEntity result = getProductUseCase.execute(productId);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.id()).isEqualTo(testProduct.getId());
-        assertThat(response.productName()).isEqualTo(testProduct.getProductName());
-        assertThat(response.options()).isEmpty();
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(testProduct.getId());
+        assertThat(result.getProductName()).isEqualTo(testProduct.getProductName());
     }
 
     @Test
@@ -138,7 +113,7 @@ class GetProductUseCaseTest {
     void execute_ProductNotFound_ThrowsException() {
         // given
         Long productId = 999L;
-        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+        when(productRepository.getOrThrow(productId)).thenThrow(new ProductNotFoundException("상품을 찾을 수 없습니다."));
 
         // when & then
         assertThatThrownBy(() -> getProductUseCase.execute(productId))
