@@ -1,9 +1,12 @@
 package com.hhplus.ecommerce.application.order;
 
 import com.hhplus.ecommerce.domain.order.OrderEntity;
+import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 import com.hhplus.ecommerce.domain.order.OrderStatus;
+import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
+import com.hhplus.ecommerce.domain.productOption.StockUpdateType;
 import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
-import com.hhplus.ecommerce.presentation.order.res.OrderResponse;
+import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,15 +14,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Collections;
-import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CancelOrderUseCaseTest {
@@ -28,7 +34,19 @@ class CancelOrderUseCaseTest {
     private OrderRepository orderRepository;
 
     @Mock
+    private ProductOptionRepository productOptionRepository;
+
+    @Mock
+    private RedissonClient redissonClient;
+
+    @Mock
+    private TransactionTemplate transactionTemplate;
+
+    @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private RLock lock;
 
     @InjectMocks
     private CancelOrderUseCase cancelOrderUseCase;
@@ -56,11 +74,48 @@ class CancelOrderUseCaseTest {
     }
 
     @Test
-    @DisplayName("주문 취소에 성공한다")
-    void cancelOrder() {
+    @DisplayName("주문 취소에 성공하고 재고가 복구된다")
+    void cancelOrder() throws Exception {
         // given
+        Long productOptionId = 1L;
+        Integer orderQuantity = 2;
+        Long currentStock = 10L;
+
+        OrderItemEntity orderItem = new OrderItemEntity(
+            1L,
+            orderId,
+            1L,
+            productOptionId,
+            "테스트 상품",
+            "Red",
+            orderQuantity,
+            20000,
+            System.currentTimeMillis()
+        );
+
+        ProductOptionEntity productOption = new ProductOptionEntity(
+            productOptionId,
+            1L,
+            "Red",
+            1000L,
+            currentStock,
+            0L,
+            0L
+        );
+
         when(orderRepository.getOrThrow(orderId)).thenReturn(pendingOrder);
-        when(orderRepository.findItemsByOrderId(orderId)).thenReturn(Collections.emptyList());
+        when(orderRepository.findItemsByOrderId(orderId)).thenReturn(List.of(orderItem));
+
+        // Mock Redisson lock
+        when(redissonClient.getLock(anyString())).thenReturn(lock);
+        when(redissonClient.getMultiLock(any())).thenReturn(lock);
+        when(lock.tryLock(anyLong(), anyLong(), any())).thenReturn(true);
+
+        // Mock TransactionTemplate to execute the callback
+        when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
+            org.springframework.transaction.support.TransactionCallback<?> callback = invocation.getArgument(0);
+            return callback.doInTransaction(null);
+        });
 
         long now = System.currentTimeMillis();
         OrderEntity cancelledOrder = new OrderEntity(
@@ -76,6 +131,8 @@ class CancelOrderUseCaseTest {
             now
         );
         when(orderRepository.save(any(OrderEntity.class))).thenReturn(cancelledOrder);
+        when(productOptionRepository.getOrThrow(productOptionId)).thenReturn(productOption);
+        when(productOptionRepository.save(any(ProductOptionEntity.class))).thenReturn(productOption);
 
         // when
         OrderEntity result = cancelOrderUseCase.execute(orderId);
@@ -84,6 +141,10 @@ class CancelOrderUseCaseTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(orderId);
         assertThat(result.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+
+        // 재고 복구 확인
+        verify(productOptionRepository, times(1)).getOrThrow(productOptionId);
+        verify(productOptionRepository, times(1)).save(any(ProductOptionEntity.class));
     }
 
     @Test
