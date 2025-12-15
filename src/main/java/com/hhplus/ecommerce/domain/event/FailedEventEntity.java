@@ -86,4 +86,9 @@ public class FailedEventEntity {
         this.errorMessage = errorMessage;
         this.updatedAt = System.currentTimeMillis();
     }
+
+    public void markAsPending() {
+        this.status = FailedEventStatus.PENDING;
+        this.updatedAt = System.currentTimeMillis();
+    }
 }

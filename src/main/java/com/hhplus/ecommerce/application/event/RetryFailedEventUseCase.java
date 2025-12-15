@@ -54,11 +54,12 @@ public class RetryFailedEventUseCase {
             return savedEvent;
 
         } catch (Exception e) {
-            log.error("실패 이벤트 재처리 실패 - eventId: {}", eventId, e);
+            log.error("실패 이벤트 재처리 실패 - eventId: {}, retryCount: {}",
+                eventId, failedEvent.getRetryCount(), e);
 
-            // 재시도 횟수 증가 및 실패로 변경
+            // 재시도 횟수 증가 및 PENDING으로 복구 (스케줄러가 다시 재처리)
             failedEvent.increaseRetryCount();
-            failedEvent.markAsFailed(e.getMessage());
+            failedEvent.markAsPending();
             failedEventRepository.save(failedEvent);
 
             throw new RuntimeException("실패 이벤트 재처리에 실패했습니다. ID: " + eventId, e);
