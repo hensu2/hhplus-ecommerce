@@ -3,9 +3,12 @@ package com.hhplus.ecommerce.scheduler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hhplus.ecommerce.application.coupon.dto.CouponIssuePending;
+import com.hhplus.ecommerce.domain.coupon.CouponEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponStatus;
+import com.hhplus.ecommerce.domain.coupon.event.kafka.CouponIssuedKafkaEvent;
 import com.hhplus.ecommerce.infrastructure.coupon.CouponRepository;
+import com.hhplus.ecommerce.infrastructure.kafka.producer.CouponKafkaProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,6 +30,7 @@ public class CouponSyncScheduler {
     private final RedisTemplate<String, String> redisTemplate;
     private final CouponRepository couponRepository;
     private final ObjectMapper objectMapper;
+    private final CouponKafkaProducer couponKafkaProducer;
 
     /**
      * 10초마다 Redis → DB 동기화
@@ -133,6 +137,22 @@ public class CouponSyncScheduler {
 
         // 배치 삽입
         List<CouponHistoryEntity> savedHistories = couponRepository.saveAllHistories(historiesToSave);
+
+        // 쿠폰 정보 조회 (Kafka 이벤트 발행에 필요)
+        CouponEntity coupon = couponRepository.getOrThrow(couponId);
+
+        // Kafka 이벤트 발행 (트랜잭션 커밋 후)
+        for (CouponHistoryEntity history : savedHistories) {
+            try {
+                CouponIssuedKafkaEvent event = new CouponIssuedKafkaEvent(history, coupon);
+                couponKafkaProducer.publish(event);
+                log.info("쿠폰 발급 이벤트 발행 - couponHistoryId: {}, userId: {}, couponId: {}",
+                    history.getId(), history.getUserId(), history.getCouponId());
+            } catch (Exception e) {
+                log.error("쿠폰 발급 이벤트 발행 실패 - couponHistoryId: {}", history.getId(), e);
+                // 이벤트 발행 실패는 비즈니스 로직에 영향을 주지 않음
+            }
+        }
 
         // 동기화 완료 마킹
         String syncKey = "coupon:synced:histories";
