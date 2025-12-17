@@ -4,8 +4,10 @@ import com.hhplus.ecommerce.domain.order.OrderEntity;
 import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 import com.hhplus.ecommerce.domain.order.OrderStatus;
 import com.hhplus.ecommerce.domain.order.event.OrderCancelledEvent;
+import com.hhplus.ecommerce.domain.order.event.kafka.OrderCancelledKafkaEvent;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.domain.productOption.StockUpdateType;
+import com.hhplus.ecommerce.infrastructure.kafka.producer.OrderKafkaProducer;
 import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
 import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class CancelOrderUseCase {
     private final RedissonClient redissonClient;
     private final TransactionTemplate transactionTemplate;
     private final ApplicationEventPublisher eventPublisher;
+    private final OrderKafkaProducer orderKafkaProducer;
 
     public OrderEntity execute(long orderId) {
         // 주문 조회
@@ -90,6 +93,15 @@ public class CancelOrderUseCase {
                     orderItems,
                     savedOrder.getUpdatedAt()
                 ));
+
+                // Kafka 이벤트 발행 (Dual Write Pattern)
+                try {
+                    OrderCancelledKafkaEvent kafkaEvent = new OrderCancelledKafkaEvent(savedOrder, orderItems);
+                    orderKafkaProducer.publish(kafkaEvent);
+                } catch (Exception e) {
+                    // Kafka 발행 실패는 로깅만 하고 주문 취소 처리는 계속 진행
+                    // (기존 ApplicationEventPublisher는 여전히 동작)
+                }
 
                 return savedOrder;
             });

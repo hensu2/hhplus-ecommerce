@@ -4,9 +4,11 @@ import com.hhplus.ecommerce.domain.order.OrderEntity;
 import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 import com.hhplus.ecommerce.domain.order.OrderStatus;
 import com.hhplus.ecommerce.domain.order.event.OrderCreatedEvent;
+import com.hhplus.ecommerce.domain.order.event.kafka.OrderCreatedKafkaEvent;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.domain.productOption.StockUpdateType;
+import com.hhplus.ecommerce.infrastructure.kafka.producer.OrderKafkaProducer;
 import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
 import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
@@ -33,6 +35,7 @@ public class CreateOrderUseCase {
     private final RedissonClient redissonClient;
     private final TransactionTemplate transactionTemplate;
     private final ApplicationEventPublisher eventPublisher;
+    private final OrderKafkaProducer orderKafkaProducer;
 
     public OrderEntity execute(CreateOrderRequest request) {
         List<RLock> locks = new ArrayList<>();
@@ -151,6 +154,15 @@ public class CreateOrderUseCase {
                     savedItems,
                     savedOrder.getOrderedAt()
                 ));
+
+                // Kafka 이벤트 발행 (Dual Write Pattern)
+                try {
+                    OrderCreatedKafkaEvent kafkaEvent = new OrderCreatedKafkaEvent(savedOrder, savedItems);
+                    orderKafkaProducer.publish(kafkaEvent);
+                } catch (Exception e) {
+                    // Kafka 발행 실패는 로깅만 하고 주문 처리는 계속 진행
+                    // (기존 ApplicationEventPublisher는 여전히 동작)
+                }
 
                 return savedOrder;
             });

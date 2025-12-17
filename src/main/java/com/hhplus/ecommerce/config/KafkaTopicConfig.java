@@ -52,4 +52,33 @@ public class KafkaTopicConfig {
             .config("retention.ms", "2592000000") // 30일 보관 (에러 분석용)
             .build();
     }
+
+    /**
+     * 주문 이벤트 토픽
+     * - 파티션: 3
+     * - 리플리케이션: 1 (로컬 개발 환경)
+     * - 주문 생성/취소 이벤트를 처리하는 메인 토픽
+     */
+    @Bean
+    public NewTopic orderEventsTopic() {
+        return TopicBuilder.name("order-events")
+            .partitions(3)
+            .replicas(1)
+            .config("retention.ms", "604800000") // 7일 보관
+            .config("compression.type", "snappy")
+            .build();
+    }
+
+    /**
+     * Dead Letter Queue (DLQ) - 주문 이벤트
+     * - 재시도 실패한 메시지 보관
+     */
+    @Bean
+    public NewTopic orderEventsDlqTopic() {
+        return TopicBuilder.name("order-events-dlq")
+            .partitions(1)
+            .replicas(1)
+            .config("retention.ms", "2592000000") // 30일 보관 (에러 분석용)
+            .build();
+    }
 }

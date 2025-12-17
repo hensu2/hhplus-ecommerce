@@ -12,4 +12,8 @@ public final class KafkaTopics {
     // 쿠폰 도메인 토픽
     public static final String COUPON_EVENTS = "coupon-events";
     public static final String COUPON_EVENTS_DLQ = "coupon-events-dlq";
+
+    // 주문 도메인 토픽
+    public static final String ORDER_EVENTS = "order-events";
+    public static final String ORDER_EVENTS_DLQ = "order-events-dlq";
 }
