@@ -101,7 +101,6 @@ class CouponSyncSchedulerKafkaTest {
 
     @Test
     @DisplayName("PERCENT 타입 - DB 동기화 시 Kafka 이벤트가 발행된다")
-    @Transactional
     void percentCoupon_SyncToDb_PublishesKafkaEvent() throws Exception {
         // Given - PERCENT 쿠폰 생성
         CouponEntity coupon = new CouponEntity(
@@ -158,7 +157,6 @@ class CouponSyncSchedulerKafkaTest {
 
     @Test
     @DisplayName("AMOUNT 타입 - DB 동기화 시 Kafka 이벤트가 발행된다")
-    @Transactional
     void amountCoupon_SyncToDb_PublishesKafkaEvent() throws Exception {
         // Given - AMOUNT 쿠폰 생성
         CouponEntity coupon = new CouponEntity(
@@ -215,7 +213,6 @@ class CouponSyncSchedulerKafkaTest {
 
     @Test
     @DisplayName("PERCENT 타입 - 여러 쿠폰 발급이 DB 동기화 시 모두 Kafka 이벤트로 발행")
-    @Transactional
     void percentCoupon_SyncMultiple_PublishesAllKafkaEvents() throws Exception {
         // Given - PERCENT 쿠폰 생성
         CouponEntity coupon = new CouponEntity(
@@ -274,7 +271,6 @@ class CouponSyncSchedulerKafkaTest {
 
     @Test
     @DisplayName("AMOUNT 타입 - 여러 쿠폰 발급이 DB 동기화 시 모두 Kafka 이벤트로 발행")
-    @Transactional
     void amountCoupon_SyncMultiple_PublishesAllKafkaEvents() throws Exception {
         // Given - AMOUNT 쿠폰 생성
         CouponEntity coupon = new CouponEntity(

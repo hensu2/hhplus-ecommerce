@@ -1,6 +1,9 @@
 package com.hhplus.ecommerce.integration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hhplus.ecommerce.application.coupon.IssueCouponUseCase;
+import com.hhplus.ecommerce.application.coupon.dto.CouponIssuePending;
+import com.hhplus.ecommerce.application.coupon.dto.CouponIssueRequest;
 import com.hhplus.ecommerce.domain.coupon.CouponEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponStatus;
@@ -66,6 +69,9 @@ class CouponKafkaE2ETest {
     @Autowired
     private EmbeddedKafkaBroker embeddedKafkaBroker;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private Consumer<String, CouponIssuedKafkaEvent> consumer;
 
     @BeforeEach
@@ -102,8 +108,7 @@ class CouponKafkaE2ETest {
 
     @Test
     @DisplayName("PERCENT 타입 쿠폰 발급 전체 플로우: 발급 요청 → Redis 저장 → DB 동기화 → Kafka 이벤트 발행")
-    @Transactional
-    void percentCouponIssueFullFlow_WithKafkaEvent() {
+    void percentCouponIssueFullFlow_WithKafkaEvent() throws Exception {
         // Given - PERCENT 타입 쿠폰 생성
         long now = System.currentTimeMillis();
         CouponEntity coupon = new CouponEntity(
@@ -135,13 +140,24 @@ class CouponKafkaE2ETest {
         assertThat(issueResponse.getUserId()).isEqualTo(userId);
         assertThat(issueResponse.getCouponId()).isEqualTo(savedCoupon.getId());
 
-        // When - Step 2: Worker 및 DB 동기화
+        // When - Step 2: Worker 시뮬레이션 - Redis 큐에서 가져와서 pending으로 이동
         String queueKey = "coupon:issue:queue:" + savedCoupon.getId();
         String requestJson = redisTemplate.opsForList().rightPop(queueKey);
         assertThat(requestJson).isNotNull();
 
+        // CouponIssueRequest를 CouponIssuePending으로 변환
+        CouponIssueRequest request = objectMapper.readValue(requestJson, CouponIssueRequest.class);
+        CouponIssuePending pending = new CouponIssuePending(
+            0L,
+            request.getUserId(),
+            request.getCouponId(),
+            "ISSUED",
+            request.getRequestedAt()
+        );
+
         String pendingKey = "coupon:issued:pending:" + savedCoupon.getId();
-        redisTemplate.opsForHash().put(pendingKey, String.valueOf(userId), requestJson.replace("requestedAt", "issuedAt"));
+        String pendingJson = objectMapper.writeValueAsString(pending);
+        redisTemplate.opsForHash().put(pendingKey, String.valueOf(userId), pendingJson);
 
         couponSyncScheduler.syncCouponIssuesToDB();
 
@@ -174,8 +190,7 @@ class CouponKafkaE2ETest {
 
     @Test
     @DisplayName("AMOUNT 타입 쿠폰 발급 전체 플로우: 발급 요청 → Redis 저장 → DB 동기화 → Kafka 이벤트 발행")
-    @Transactional
-    void amountCouponIssueFullFlow_WithKafkaEvent() {
+    void amountCouponIssueFullFlow_WithKafkaEvent() throws Exception {
         // Given - AMOUNT 타입 쿠폰 생성
         long now = System.currentTimeMillis();
         CouponEntity coupon = new CouponEntity(
@@ -207,13 +222,24 @@ class CouponKafkaE2ETest {
         assertThat(issueResponse.getUserId()).isEqualTo(userId);
         assertThat(issueResponse.getCouponId()).isEqualTo(savedCoupon.getId());
 
-        // When - Step 2: Worker 및 DB 동기화
+        // When - Step 2: Worker 시뮬레이션 - Redis 큐에서 가져와서 pending으로 이동
         String queueKey = "coupon:issue:queue:" + savedCoupon.getId();
         String requestJson = redisTemplate.opsForList().rightPop(queueKey);
         assertThat(requestJson).isNotNull();
 
+        // CouponIssueRequest를 CouponIssuePending으로 변환
+        CouponIssueRequest request = objectMapper.readValue(requestJson, CouponIssueRequest.class);
+        CouponIssuePending pending = new CouponIssuePending(
+            0L,
+            request.getUserId(),
+            request.getCouponId(),
+            "ISSUED",
+            request.getRequestedAt()
+        );
+
         String pendingKey = "coupon:issued:pending:" + savedCoupon.getId();
-        redisTemplate.opsForHash().put(pendingKey, String.valueOf(userId), requestJson.replace("requestedAt", "issuedAt"));
+        String pendingJson = objectMapper.writeValueAsString(pending);
+        redisTemplate.opsForHash().put(pendingKey, String.valueOf(userId), pendingJson);
 
         couponSyncScheduler.syncCouponIssuesToDB();
 
@@ -246,7 +272,6 @@ class CouponKafkaE2ETest {
 
     @Test
     @DisplayName("PERCENT 타입 - 여러 사용자 동시 쿠폰 발급 시 모두 Kafka 이벤트로 발행")
-    @Transactional
     void percentCoupon_MultipleConcurrentIssuances() throws Exception {
         // Given - PERCENT 쿠폰
         long now = System.currentTimeMillis();
@@ -276,15 +301,24 @@ class CouponKafkaE2ETest {
             assertThat(response.getStatus()).isEqualTo("PENDING");
         }
 
-        // When - Worker 및 동기화
+        // When - Worker 시뮬레이션 및 동기화
         String queueKey = "coupon:issue:queue:" + savedCoupon.getId();
         String pendingKey = "coupon:issued:pending:" + savedCoupon.getId();
 
         for (int i = 0; i < userCount; i++) {
             String requestJson = redisTemplate.opsForList().rightPop(queueKey);
             if (requestJson != null) {
-                long userId = 3000 + i;
-                redisTemplate.opsForHash().put(pendingKey, String.valueOf(userId), requestJson.replace("requestedAt", "issuedAt"));
+                // CouponIssueRequest를 CouponIssuePending으로 변환
+                CouponIssueRequest request = objectMapper.readValue(requestJson, CouponIssueRequest.class);
+                CouponIssuePending pending = new CouponIssuePending(
+                    0L,
+                    request.getUserId(),
+                    request.getCouponId(),
+                    "ISSUED",
+                    request.getRequestedAt()
+                );
+                String pendingJson = objectMapper.writeValueAsString(pending);
+                redisTemplate.opsForHash().put(pendingKey, String.valueOf(request.getUserId()), pendingJson);
             }
         }
 
@@ -299,22 +333,22 @@ class CouponKafkaE2ETest {
         });
 
         // Then - Kafka 이벤트 확인
-        for (int i = 0; i < userCount; i++) {
-            ConsumerRecord<String, CouponIssuedKafkaEvent> record = KafkaTestUtils.getSingleRecord(
-                consumer,
-                KafkaTopics.COUPON_EVENTS,
-                Duration.ofSeconds(10)
-            );
+        var records = KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(10));
+        assertThat(records.count()).isGreaterThanOrEqualTo(userCount);
 
-            assertThat(record).isNotNull();
-            assertThat(record.value().getDiscountType()).isEqualTo("PERCENT");
-            assertThat(record.value().getDiscountAmount()).isEqualTo(20);
+        int count = 0;
+        for (ConsumerRecord<String, CouponIssuedKafkaEvent> record : records) {
+            if (record.topic().equals(KafkaTopics.COUPON_EVENTS)) {
+                assertThat(record.value().getDiscountType()).isEqualTo("PERCENT");
+                assertThat(record.value().getDiscountAmount()).isEqualTo(20);
+                count++;
+            }
         }
+        assertThat(count).isGreaterThanOrEqualTo(userCount);
     }
 
     @Test
     @DisplayName("AMOUNT 타입 - 여러 사용자 동시 쿠폰 발급 시 모두 Kafka 이벤트로 발행")
-    @Transactional
     void amountCoupon_MultipleConcurrentIssuances() throws Exception {
         // Given - AMOUNT 쿠폰
         long now = System.currentTimeMillis();
@@ -351,8 +385,17 @@ class CouponKafkaE2ETest {
         for (int i = 0; i < userCount; i++) {
             String requestJson = redisTemplate.opsForList().rightPop(queueKey);
             if (requestJson != null) {
-                long userId = 4000 + i;
-                redisTemplate.opsForHash().put(pendingKey, String.valueOf(userId), requestJson.replace("requestedAt", "issuedAt"));
+                // CouponIssueRequest를 CouponIssuePending으로 변환
+                CouponIssueRequest request = objectMapper.readValue(requestJson, CouponIssueRequest.class);
+                CouponIssuePending pending = new CouponIssuePending(
+                    0L,
+                    request.getUserId(),
+                    request.getCouponId(),
+                    "ISSUED",
+                    request.getRequestedAt()
+                );
+                String pendingJson = objectMapper.writeValueAsString(pending);
+                redisTemplate.opsForHash().put(pendingKey, String.valueOf(request.getUserId()), pendingJson);
             }
         }
 
@@ -367,16 +410,17 @@ class CouponKafkaE2ETest {
         });
 
         // Then - Kafka 이벤트 확인
-        for (int i = 0; i < userCount; i++) {
-            ConsumerRecord<String, CouponIssuedKafkaEvent> record = KafkaTestUtils.getSingleRecord(
-                consumer,
-                KafkaTopics.COUPON_EVENTS,
-                Duration.ofSeconds(10)
-            );
+        var records = KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(10));
+        assertThat(records.count()).isGreaterThanOrEqualTo(userCount);
 
-            assertThat(record).isNotNull();
-            assertThat(record.value().getDiscountType()).isEqualTo("AMOUNT");
-            assertThat(record.value().getDiscountAmount()).isEqualTo(3000);
+        int count = 0;
+        for (ConsumerRecord<String, CouponIssuedKafkaEvent> record : records) {
+            if (record.topic().equals(KafkaTopics.COUPON_EVENTS)) {
+                assertThat(record.value().getDiscountType()).isEqualTo("AMOUNT");
+                assertThat(record.value().getDiscountAmount()).isEqualTo(3000);
+                count++;
+            }
         }
+        assertThat(count).isGreaterThanOrEqualTo(userCount);
     }
 }

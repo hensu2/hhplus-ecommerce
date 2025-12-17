@@ -36,7 +36,6 @@ public class CouponSyncScheduler {
      * 10초마다 Redis → DB 동기화
      */
     @Scheduled(fixedRate = 10000)
-    @Transactional
     public void syncCouponIssuesToDB() {
         log.info("쿠폰 발급 내역 DB 동기화 시작");
 
@@ -135,24 +134,14 @@ public class CouponSyncScheduler {
             return 0;
         }
 
-        // 배치 삽입
-        List<CouponHistoryEntity> savedHistories = couponRepository.saveAllHistories(historiesToSave);
+        // 트랜잭션 내에서 DB 저장
+        List<CouponHistoryEntity> savedHistories = saveHistoriesInTransaction(historiesToSave);
 
         // 쿠폰 정보 조회 (Kafka 이벤트 발행에 필요)
         CouponEntity coupon = couponRepository.getOrThrow(couponId);
 
-        // Kafka 이벤트 발행 (트랜잭션 커밋 후)
-        for (CouponHistoryEntity history : savedHistories) {
-            try {
-                CouponIssuedKafkaEvent event = new CouponIssuedKafkaEvent(history, coupon);
-                couponKafkaProducer.publish(event);
-                log.info("쿠폰 발급 이벤트 발행 - couponHistoryId: {}, userId: {}, couponId: {}",
-                    history.getId(), history.getUserId(), history.getCouponId());
-            } catch (Exception e) {
-                log.error("쿠폰 발급 이벤트 발행 실패 - couponHistoryId: {}", history.getId(), e);
-                // 이벤트 발행 실패는 비즈니스 로직에 영향을 주지 않음
-            }
-        }
+        // Kafka 이벤트 발행 (트랜잭션 외부, 커밋 후)
+        publishKafkaEvents(savedHistories, coupon);
 
         // 동기화 완료 마킹
         String syncKey = "coupon:synced:histories";
@@ -173,6 +162,25 @@ public class CouponSyncScheduler {
         log.info("DB 동기화 완료 - couponId: {}, count: {}", couponId, savedHistories.size());
 
         return savedHistories.size();
+    }
+
+    @Transactional
+    protected List<CouponHistoryEntity> saveHistoriesInTransaction(List<CouponHistoryEntity> historiesToSave) {
+        return couponRepository.saveAllHistories(historiesToSave);
+    }
+
+    protected void publishKafkaEvents(List<CouponHistoryEntity> savedHistories, CouponEntity coupon) {
+        for (CouponHistoryEntity history : savedHistories) {
+            try {
+                CouponIssuedKafkaEvent event = new CouponIssuedKafkaEvent(history, coupon);
+                couponKafkaProducer.publish(event);
+                log.info("쿠폰 발급 이벤트 발행 - couponHistoryId: {}, userId: {}, couponId: {}",
+                    history.getId(), history.getUserId(), history.getCouponId());
+            } catch (Exception e) {
+                log.error("쿠폰 발급 이벤트 발행 실패 - couponHistoryId: {}", history.getId(), e);
+                // 이벤트 발행 실패는 비즈니스 로직에 영향을 주지 않음
+            }
+        }
     }
 
     /**

@@ -210,18 +210,19 @@ class CouponKafkaProducerTest {
         }
 
         // Then - 3개의 이벤트가 모두 발행되었는지 확인
-        for (int i = 0; i < 3; i++) {
-            ConsumerRecord<String, CouponIssuedKafkaEvent> record = KafkaTestUtils.getSingleRecord(
-                consumer,
-                KafkaTopics.COUPON_EVENTS,
-                Duration.ofSeconds(10)
-            );
+        var records = KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(10));
+        assertThat(records.count()).isGreaterThanOrEqualTo(3);
 
-            assertThat(record).isNotNull();
-            assertThat(record.key()).isEqualTo("1"); // 동일 userId
-            assertThat(record.value().getUserId()).isEqualTo(1L);
-            assertThat(record.value().getDiscountType()).isEqualTo("PERCENT");
+        int count = 0;
+        for (ConsumerRecord<String, CouponIssuedKafkaEvent> record : records) {
+            if (record.topic().equals(KafkaTopics.COUPON_EVENTS)) {
+                assertThat(record.key()).isEqualTo("1"); // 동일 userId
+                assertThat(record.value().getUserId()).isEqualTo(1L);
+                assertThat(record.value().getDiscountType()).isEqualTo("PERCENT");
+                count++;
+            }
         }
+        assertThat(count).isGreaterThanOrEqualTo(3);
     }
 
     @Test
@@ -257,17 +258,18 @@ class CouponKafkaProducerTest {
         }
 
         // Then - 3개의 이벤트가 모두 발행되었는지 확인
-        for (int i = 0; i < 3; i++) {
-            ConsumerRecord<String, CouponIssuedKafkaEvent> record = KafkaTestUtils.getSingleRecord(
-                consumer,
-                KafkaTopics.COUPON_EVENTS,
-                Duration.ofSeconds(10)
-            );
+        var records = KafkaTestUtils.getRecords(consumer, Duration.ofSeconds(10));
+        assertThat(records.count()).isGreaterThanOrEqualTo(3);
 
-            assertThat(record).isNotNull();
-            assertThat(record.key()).isEqualTo("3"); // 동일 userId
-            assertThat(record.value().getUserId()).isEqualTo(3L);
-            assertThat(record.value().getDiscountType()).isEqualTo("AMOUNT");
+        int count = 0;
+        for (ConsumerRecord<String, CouponIssuedKafkaEvent> record : records) {
+            if (record.topic().equals(KafkaTopics.COUPON_EVENTS)) {
+                assertThat(record.key()).isEqualTo("3"); // 동일 userId
+                assertThat(record.value().getUserId()).isEqualTo(3L);
+                assertThat(record.value().getDiscountType()).isEqualTo("AMOUNT");
+                count++;
+            }
         }
+        assertThat(count).isGreaterThanOrEqualTo(3);
     }
 }
