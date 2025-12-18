@@ -3,9 +3,13 @@ package com.hhplus.ecommerce.application.order;
 import com.hhplus.ecommerce.domain.order.OrderEntity;
 import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 import com.hhplus.ecommerce.domain.order.OrderStatus;
+import com.hhplus.ecommerce.domain.product.ProductEntity;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.domain.productOption.StockUpdateType;
+import com.hhplus.ecommerce.infrastructure.kafka.producer.OrderKafkaProducer;
+import com.hhplus.ecommerce.infrastructure.kafka.producer.StockKafkaProducer;
 import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
+import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +41,9 @@ class CancelOrderUseCaseTest {
     private ProductOptionRepository productOptionRepository;
 
     @Mock
+    private ProductRepository productRepository;
+
+    @Mock
     private RedissonClient redissonClient;
 
     @Mock
@@ -44,6 +51,12 @@ class CancelOrderUseCaseTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private OrderKafkaProducer orderKafkaProducer;
+
+    @Mock
+    private StockKafkaProducer stockKafkaProducer;
 
     @Mock
     private RLock lock;
@@ -132,6 +145,10 @@ class CancelOrderUseCaseTest {
         );
         when(orderRepository.save(any(OrderEntity.class))).thenReturn(cancelledOrder);
         when(productOptionRepository.getOrThrow(productOptionId)).thenReturn(productOption);
+
+        ProductEntity product = new ProductEntity(1L, 1L, "테스트 상품", "설명", 10000L, 0L, 0L);
+        when(productRepository.getOrThrow(anyLong())).thenReturn(product);
+
         when(productOptionRepository.save(any(ProductOptionEntity.class))).thenReturn(productOption);
 
         // when
