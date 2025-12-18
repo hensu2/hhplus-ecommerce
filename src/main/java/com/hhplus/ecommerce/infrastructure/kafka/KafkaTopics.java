@@ -16,4 +16,8 @@ public final class KafkaTopics {
     // 주문 도메인 토픽
     public static final String ORDER_EVENTS = "order-events";
     public static final String ORDER_EVENTS_DLQ = "order-events-dlq";
+
+    // 재고 도메인 토픽
+    public static final String STOCK_EVENTS = "stock-events";
+    public static final String STOCK_EVENTS_DLQ = "stock-events-dlq";
 }

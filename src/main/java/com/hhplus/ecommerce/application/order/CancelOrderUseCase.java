@@ -5,10 +5,15 @@ import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 import com.hhplus.ecommerce.domain.order.OrderStatus;
 import com.hhplus.ecommerce.domain.order.event.OrderCancelledEvent;
 import com.hhplus.ecommerce.domain.order.event.kafka.OrderCancelledKafkaEvent;
+import com.hhplus.ecommerce.domain.product.ProductEntity;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.domain.productOption.StockUpdateType;
+import com.hhplus.ecommerce.domain.productOption.event.kafka.StockChangedKafkaEvent;
+import com.hhplus.ecommerce.domain.productOption.event.kafka.StockEventType;
 import com.hhplus.ecommerce.infrastructure.kafka.producer.OrderKafkaProducer;
+import com.hhplus.ecommerce.infrastructure.kafka.producer.StockKafkaProducer;
 import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
+import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
@@ -27,10 +32,12 @@ public class CancelOrderUseCase {
 
     private final OrderRepository orderRepository;
     private final ProductOptionRepository productOptionRepository;
+    private final ProductRepository productRepository;
     private final RedissonClient redissonClient;
     private final TransactionTemplate transactionTemplate;
     private final ApplicationEventPublisher eventPublisher;
     private final OrderKafkaProducer orderKafkaProducer;
+    private final StockKafkaProducer stockKafkaProducer;
 
     public OrderEntity execute(long orderId) {
         // 주문 조회
@@ -83,8 +90,27 @@ public class CancelOrderUseCase {
                 // 재고 복구
                 for (OrderItemEntity item : orderItems) {
                     ProductOptionEntity option = productOptionRepository.getOrThrow(item.getProductOptionId());
+                    ProductEntity product = productRepository.getOrThrow(option.getProductId());
+
+                    Long previousStock = option.getStock();
                     ProductOptionEntity updatedOption = option.updateStock(StockUpdateType.INCREASE, item.getQuantity());
-                    productOptionRepository.save(updatedOption);
+                    ProductOptionEntity savedOption = productOptionRepository.save(updatedOption);
+
+                    // Stock Kafka 이벤트 발행 (주문 취소로 인한 재고 증가)
+                    try {
+                        StockChangedKafkaEvent stockEvent = new StockChangedKafkaEvent(
+                            StockEventType.STOCK_INCREASED,
+                            savedOption,
+                            product.getProductName(),
+                            previousStock,
+                            savedOption.getStock(),
+                            item.getQuantity(),
+                            "ORDER_CANCELLED"
+                        );
+                        stockKafkaProducer.publish(stockEvent);
+                    } catch (Exception e) {
+                        // Kafka 발행 실패는 로깅만 하고 주문 취소 처리는 계속 진행
+                    }
                 }
 
                 // 이벤트 발행 (트랜잭션 커밋 후 비동기 실행)
