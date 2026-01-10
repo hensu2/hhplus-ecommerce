@@ -28,6 +28,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+    // Spring Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // Spring Retry
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework:spring-aspects'
+
     // Redisson - Distributed Lock
     implementation 'org.redisson:redisson-spring-boot-starter:3.25.2'
 
@@ -47,13 +54,32 @@ dependencies {
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.kafka:spring-kafka-test'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testImplementation 'org.awaitility:awaitility:4.2.0'
+    testImplementation 'org.testcontainers:testcontainers:1.19.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    testImplementation 'org.testcontainers:kafka:1.19.3'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
     ignoreFailures = true
     finalizedBy jacocoTestReport
+}
+
+// 새 쿠폰 테스트만 실행하는 태스크
+task couponTest(type: Test) {
+    useJUnitPlatform {
+        includeTags 'none' // 다른 테스트는 제외
+    }
+    include '**/IssueCouponUseCaseTest.class'
+    include '**/RedisCouponConcurrencyTest.class'
+    include '**/CouponFullFlowIntegrationTest.class'
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
 }
 
 // Jacoco 설정

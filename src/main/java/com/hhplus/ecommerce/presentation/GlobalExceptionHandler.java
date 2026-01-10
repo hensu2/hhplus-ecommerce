@@ -5,6 +5,7 @@ import com.hhplus.ecommerce.common.exception.InvalidStockUpdateException;
 import com.hhplus.ecommerce.common.exception.ProductNotFoundException;
 import com.hhplus.ecommerce.common.exception.ProductOptionNotFoundException;
 import com.hhplus.ecommerce.common.exception.UserNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidInputException.class)
@@ -126,6 +128,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(Exception e) {
+        log.error("Unhandled exception: {}", e.getClass().getName(), e);
+
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());
         errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());

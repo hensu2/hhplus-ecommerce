@@ -6,7 +6,6 @@ import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.domain.productOption.StockUpdateType;
 import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
 import com.hhplus.ecommerce.presentation.productOption.req.UpdateStockRequest;
-import com.hhplus.ecommerce.presentation.productOption.res.UpdateStockResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,7 +48,7 @@ class UpdateStockUseCaseTest {
             .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        UpdateStockResponse result = updateStockUseCase.execute(1L, request);
+        ProductOptionEntity result = updateStockUseCase.execute(1L, request);
 
         // then
         assertThat(result.getStock()).isEqualTo(50);
@@ -65,7 +64,7 @@ class UpdateStockUseCaseTest {
             .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        UpdateStockResponse result = updateStockUseCase.execute(1L, request);
+        ProductOptionEntity result = updateStockUseCase.execute(1L, request);
 
         // then
         assertThat(result.getStock()).isEqualTo(130);
@@ -81,7 +80,7 @@ class UpdateStockUseCaseTest {
             .thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        UpdateStockResponse result = updateStockUseCase.execute(1L, request);
+        ProductOptionEntity result = updateStockUseCase.execute(1L, request);
 
         // then
         assertThat(result.getStock()).isEqualTo(70);

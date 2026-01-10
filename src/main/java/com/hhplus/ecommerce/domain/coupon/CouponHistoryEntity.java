@@ -37,8 +37,8 @@ public class CouponHistoryEntity {
     @Column(name = "used_at")
     private Long usedAt;
 
-    public IssueCouponResponse toIssueCouponResponse(CouponEntity coupon) {
-        return new IssueCouponResponse(
+    public IssueCouponResponse.IssueCouponCompletedResponse toIssueCouponCompletedResponse(CouponEntity coupon) {
+        return new IssueCouponResponse.IssueCouponCompletedResponse(
             this.id,
             this.couponId,
             coupon.getCouponName(),

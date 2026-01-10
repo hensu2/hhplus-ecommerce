@@ -10,10 +10,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,12 +30,21 @@ class ProcessPaymentUseCaseTest {
     @Mock
     private PaymentRepository paymentRepository;
 
+    @Mock
+    private RedissonClient redissonClient;
+
+    @Mock
+    private TransactionTemplate transactionTemplate;
+
+    @Mock
+    private RLock lock;
+
     @InjectMocks
     private ProcessPaymentUseCase processPaymentUseCase;
 
     @Test
     @DisplayName("결제 처리 성공")
-    void execute_Success() {
+    void execute_Success() throws Exception {
         // given
         Long userId = 1L;
         Long orderId = 1L;
@@ -36,6 +52,19 @@ class ProcessPaymentUseCaseTest {
         ProcessPaymentRequest request = new ProcessPaymentRequest(userId, orderId, amount);
 
         PaymentEntity savedPayment = new PaymentEntity(1L, orderId, userId, amount, PaymentStatus.COMPLETED, 0L, 0L);
+
+        // Mock Redisson lock
+        when(redissonClient.getLock(anyString())).thenReturn(lock);
+        when(lock.tryLock(anyLong(), anyLong(), any())).thenReturn(true);
+        when(lock.isHeldByCurrentThread()).thenReturn(true);
+
+        // Mock TransactionTemplate to execute the callback
+        when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
+            org.springframework.transaction.support.TransactionCallback<?> callback = invocation.getArgument(0);
+            return callback.doInTransaction(null);
+        });
+
+        when(paymentRepository.findByOrderId(orderId)).thenReturn(Collections.emptyList());
         when(paymentRepository.save(any(PaymentEntity.class))).thenReturn(savedPayment);
 
         // when
@@ -52,9 +81,20 @@ class ProcessPaymentUseCaseTest {
 
     @Test
     @DisplayName("결제 금액이 0 이하인 경우 실패")
-    void execute_InvalidAmount_Fail() {
+    void execute_InvalidAmount_Fail() throws Exception {
         // given
         ProcessPaymentRequest request = new ProcessPaymentRequest(1L, 1L, 0);
+
+        // Mock Redisson lock
+        when(redissonClient.getLock(anyString())).thenReturn(lock);
+        when(lock.tryLock(anyLong(), anyLong(), any())).thenReturn(true);
+        when(lock.isHeldByCurrentThread()).thenReturn(true);
+
+        // Mock TransactionTemplate to execute the callback
+        when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
+            org.springframework.transaction.support.TransactionCallback<?> callback = invocation.getArgument(0);
+            return callback.doInTransaction(null);
+        });
 
         // when & then
         assertThatThrownBy(() -> processPaymentUseCase.execute(request))

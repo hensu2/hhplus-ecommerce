@@ -1,6 +1,7 @@
 package com.hhplus.ecommerce.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hhplus.ecommerce.config.EmbeddedRedisConfig;
 import com.hhplus.ecommerce.domain.productOption.StockUpdateType;
 import com.hhplus.ecommerce.presentation.productOption.req.UpdateStockRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.*;
@@ -21,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
+@ContextConfiguration(initializers = EmbeddedRedisConfig.class)
 @DisplayName("ProductOptionController 통합 테스트")
 class ProductOptionControllerIntegrationTest {
 

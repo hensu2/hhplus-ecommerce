@@ -58,4 +58,9 @@ public class CouponRepositoryImpl implements CouponRepository {
         coupon.decreaseStock();
         return couponJpaRepository.save(coupon);
     }
+
+    @Override
+    public List<CouponHistoryEntity> saveAllHistories(List<CouponHistoryEntity> histories) {
+        return couponHistoryJpaRepository.saveAll(histories);
+    }
 }

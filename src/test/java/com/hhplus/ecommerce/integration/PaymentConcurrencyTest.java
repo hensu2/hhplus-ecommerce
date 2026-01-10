@@ -3,6 +3,7 @@ package com.hhplus.ecommerce.integration;
 import com.hhplus.ecommerce.application.order.CreateOrderUseCase;
 import com.hhplus.ecommerce.application.payment.CancelPaymentUseCase;
 import com.hhplus.ecommerce.application.payment.ProcessPaymentUseCase;
+import com.hhplus.ecommerce.config.EmbeddedRedisConfig;
 import com.hhplus.ecommerce.domain.order.OrderEntity;
 import com.hhplus.ecommerce.domain.payment.PaymentEntity;
 import com.hhplus.ecommerce.domain.payment.PaymentStatus;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -25,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@ContextConfiguration(initializers = EmbeddedRedisConfig.class)
 @DisplayName("결제 동시성 테스트")
 class PaymentConcurrencyTest {
 

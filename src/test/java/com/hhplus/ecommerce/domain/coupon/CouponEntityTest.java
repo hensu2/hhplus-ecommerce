@@ -36,9 +36,9 @@ class CouponEntityTest {
         CouponEntity updated = testCoupon.decreaseStock();
 
         // then
-        assertThat(updated.stock()).isEqualTo(99);
-        assertThat(updated.id()).isEqualTo(testCoupon.id());
-        assertThat(updated.couponName()).isEqualTo(testCoupon.couponName());
+        assertThat(updated.getStock()).isEqualTo(99);
+        assertThat(updated.getId()).isEqualTo(testCoupon.getId());
+        assertThat(updated.getCouponName()).isEqualTo(testCoupon.getCouponName());
     }
 
     @Test
@@ -89,21 +89,21 @@ class CouponEntityTest {
         CouponEntity updated = oneStockCoupon.decreaseStock();
 
         // then
-        assertThat(updated.stock()).isEqualTo(0);
+        assertThat(updated.getStock()).isEqualTo(0);
     }
 
     @Test
     @DisplayName("재고 감소 시 updatedAt이 업데이트된다")
     void decreaseStock_UpdatesTimestamp() throws InterruptedException {
         // given
-        long beforeUpdate = testCoupon.updatedAt();
+        long beforeUpdate = testCoupon.getUpdatedAt();
         Thread.sleep(10);
 
         // when
         CouponEntity updated = testCoupon.decreaseStock();
 
         // then
-        assertThat(updated.updatedAt()).isGreaterThan(beforeUpdate);
+        assertThat(updated.getUpdatedAt()).isGreaterThan(beforeUpdate);
     }
 
     @Test
@@ -113,15 +113,15 @@ class CouponEntityTest {
         CouponEntity updated = testCoupon.decreaseStock();
 
         // then
-        assertThat(updated.id()).isEqualTo(testCoupon.id());
-        assertThat(updated.couponName()).isEqualTo(testCoupon.couponName());
-        assertThat(updated.discountType()).isEqualTo(testCoupon.discountType());
-        assertThat(updated.discountAmount()).isEqualTo(testCoupon.discountAmount());
-        assertThat(updated.useMinAmount()).isEqualTo(testCoupon.useMinAmount());
-        assertThat(updated.useMaxAmount()).isEqualTo(testCoupon.useMaxAmount());
-        assertThat(updated.validFrom()).isEqualTo(testCoupon.validFrom());
-        assertThat(updated.validUntil()).isEqualTo(testCoupon.validUntil());
-        assertThat(updated.createdAt()).isEqualTo(testCoupon.createdAt());
+        assertThat(updated.getId()).isEqualTo(testCoupon.getId());
+        assertThat(updated.getCouponName()).isEqualTo(testCoupon.getCouponName());
+        assertThat(updated.getDiscountType()).isEqualTo(testCoupon.getDiscountType());
+        assertThat(updated.getDiscountAmount()).isEqualTo(testCoupon.getDiscountAmount());
+        assertThat(updated.getUseMinAmount()).isEqualTo(testCoupon.getUseMinAmount());
+        assertThat(updated.getUseMaxAmount()).isEqualTo(testCoupon.getUseMaxAmount());
+        assertThat(updated.getValidFrom()).isEqualTo(testCoupon.getValidFrom());
+        assertThat(updated.getValidUntil()).isEqualTo(testCoupon.getValidUntil());
+        assertThat(updated.getCreatedAt()).isEqualTo(testCoupon.getCreatedAt());
     }
 
     @Test
@@ -133,6 +133,6 @@ class CouponEntityTest {
         CouponEntity updated3 = updated2.decreaseStock();
 
         // then
-        assertThat(updated3.stock()).isEqualTo(97);
+        assertThat(updated3.getStock()).isEqualTo(97);
     }
 }

@@ -3,9 +3,15 @@ package com.hhplus.ecommerce.application.order;
 import com.hhplus.ecommerce.domain.order.OrderEntity;
 import com.hhplus.ecommerce.domain.order.OrderItemEntity;
 import com.hhplus.ecommerce.domain.order.OrderStatus;
+import com.hhplus.ecommerce.domain.order.event.OrderCreatedEvent;
+import com.hhplus.ecommerce.domain.order.event.kafka.OrderCreatedKafkaEvent;
 import com.hhplus.ecommerce.domain.product.ProductEntity;
 import com.hhplus.ecommerce.domain.productOption.ProductOptionEntity;
 import com.hhplus.ecommerce.domain.productOption.StockUpdateType;
+import com.hhplus.ecommerce.domain.productOption.event.kafka.StockChangedKafkaEvent;
+import com.hhplus.ecommerce.domain.productOption.event.kafka.StockEventType;
+import com.hhplus.ecommerce.infrastructure.kafka.producer.OrderKafkaProducer;
+import com.hhplus.ecommerce.infrastructure.kafka.producer.StockKafkaProducer;
 import com.hhplus.ecommerce.infrastructure.order.OrderRepository;
 import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import com.hhplus.ecommerce.infrastructure.productOption.ProductOptionRepository;
@@ -14,6 +20,7 @@ import com.hhplus.ecommerce.presentation.order.req.OrderItemRequest;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -30,6 +37,9 @@ public class CreateOrderUseCase {
     private final ProductRepository productRepository;
     private final RedissonClient redissonClient;
     private final TransactionTemplate transactionTemplate;
+    private final ApplicationEventPublisher eventPublisher;
+    private final OrderKafkaProducer orderKafkaProducer;
+    private final StockKafkaProducer stockKafkaProducer;
 
     public OrderEntity execute(CreateOrderRequest request) {
         List<RLock> locks = new ArrayList<>();
@@ -56,12 +66,13 @@ public class CreateOrderUseCase {
 
         // MultiLock: 모든 락을 원자적으로 획득 (Pub/Sub 기반)
         RLock multiLock = redissonClient.getMultiLock(locks.toArray(new RLock[0]));
+        boolean lockAcquired = false;
 
         try {
             // 1. 락 획득 (트랜잭션 외부)
-            boolean acquired = multiLock.tryLock(10, 5, TimeUnit.SECONDS);
+            lockAcquired = multiLock.tryLock(10, 5, TimeUnit.SECONDS);
 
-            if (!acquired) {
+            if (!lockAcquired) {
                 throw new RuntimeException("주문 처리 중입니다. 잠시 후 다시 시도해주세요.");
             }
 
@@ -87,8 +98,25 @@ public class CreateOrderUseCase {
                     }
 
                     // 재고 감소
+                    Long previousStock = option.getStock();
                     ProductOptionEntity updatedOption = option.updateStock(StockUpdateType.DECREASE, item.quantity());
-                    productOptionRepository.save(updatedOption);
+                    ProductOptionEntity savedOption = productOptionRepository.save(updatedOption);
+
+                    // Stock Kafka 이벤트 발행 (주문 생성으로 인한 재고 감소)
+                    try {
+                        StockChangedKafkaEvent stockEvent = new StockChangedKafkaEvent(
+                            StockEventType.STOCK_DECREASED,
+                            savedOption,
+                            product.getProductName(),
+                            previousStock,
+                            savedOption.getStock(),
+                            item.quantity(),
+                            "ORDER_CREATED"
+                        );
+                        stockKafkaProducer.publish(stockEvent);
+                    } catch (Exception e) {
+                        // Kafka 발행 실패는 로깅만 하고 주문 처리는 계속 진행
+                    }
 
                     // 상품 기본 가격 + 옵션 추가 가격
                     int itemPrice = (product.getPrice().intValue() + option.getAdditionalPrice().intValue()) * item.quantity();
@@ -124,6 +152,7 @@ public class CreateOrderUseCase {
                 );
                 OrderEntity savedOrder = orderRepository.save(order);
 
+                List<OrderItemEntity> savedItems = new ArrayList<>();
                 for (OrderItemEntity orderItem : orderItems) {
                     OrderItemEntity itemWithOrderId = new OrderItemEntity(
                         orderItem.getId(),
@@ -136,7 +165,24 @@ public class CreateOrderUseCase {
                         orderItem.getPrice(),
                         orderItem.getCreatedAt()
                     );
-                    orderRepository.saveItem(itemWithOrderId);
+                    OrderItemEntity savedItem = orderRepository.saveItem(itemWithOrderId);
+                    savedItems.add(savedItem);
+                }
+
+                // 이벤트 발행 (트랜잭션 커밋 후 비동기 실행)
+                eventPublisher.publishEvent(new OrderCreatedEvent(
+                    savedOrder.getId(),
+                    savedItems,
+                    savedOrder.getOrderedAt()
+                ));
+
+                // Kafka 이벤트 발행 (Dual Write Pattern)
+                try {
+                    OrderCreatedKafkaEvent kafkaEvent = new OrderCreatedKafkaEvent(savedOrder, savedItems);
+                    orderKafkaProducer.publish(kafkaEvent);
+                } catch (Exception e) {
+                    // Kafka 발행 실패는 로깅만 하고 주문 처리는 계속 진행
+                    // (기존 ApplicationEventPublisher는 여전히 동작)
                 }
 
                 return savedOrder;
@@ -147,8 +193,12 @@ public class CreateOrderUseCase {
             throw new RuntimeException("주문 처리 중 오류가 발생했습니다.", e);
         } finally {
             // 3. 트랜잭션 커밋 후 락 해제
-            if (multiLock.isHeldByCurrentThread()) {
-                multiLock.unlock();
+            if (lockAcquired) {
+                try {
+                    multiLock.unlock();
+                } catch (IllegalMonitorStateException e) {
+                    // 락이 이미 해제된 경우 무시
+                }
             }
         }
     }
