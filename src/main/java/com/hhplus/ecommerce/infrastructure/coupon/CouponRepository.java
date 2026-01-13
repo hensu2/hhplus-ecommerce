@@ -15,6 +15,11 @@ public interface CouponRepository {
     List<CouponHistoryEntity> findHistoriesByUserId(long userId);
     CouponEntity decreaseStock(long couponId);
 
+    /**
+     * 배치 삽입 (DB 동기화용)
+     */
+    List<CouponHistoryEntity> saveAllHistories(List<CouponHistoryEntity> histories);
+
     default CouponEntity getOrThrow(long couponId) {
         return findById(couponId)
             .orElseThrow(() -> new IllegalArgumentException("쿠폰을 찾을 수 없습니다."));

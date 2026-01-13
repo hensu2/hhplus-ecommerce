@@ -4,7 +4,6 @@ import com.hhplus.ecommerce.common.exception.InvalidInputException;
 import com.hhplus.ecommerce.common.exception.UserNotFoundException;
 import com.hhplus.ecommerce.domain.user.UserEntity;
 import com.hhplus.ecommerce.infrastructure.user.UserRepository;
-import com.hhplus.ecommerce.presentation.user.res.UserResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,21 +38,21 @@ class GetUserUseCaseTest {
 
     @Test
     @DisplayName("유효한 사용자 ID로 사용자를 조회한다")
-    void execute_ValidUserId_ReturnsUserResponse() {
+    void execute_ValidUserId_ReturnsUserEntity() {
         // given
         Long userId = 1L;
-        given(userRepository.findById(userId)).willReturn(Optional.of(testUser));
+        given(userRepository.getOrThrow(userId)).willReturn(testUser);
 
         // when
-        UserResponse response = getUserUseCase.execute(userId);
+        UserEntity result = getUserUseCase.execute(userId);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.getId()).isEqualTo(testUser.id());
-        assertThat(response.getUsername()).isEqualTo(testUser.username());
-        assertThat(response.getPoint()).isEqualTo(testUser.point());
-        assertThat(response.getRole()).isEqualTo(testUser.role());
-        verify(userRepository).findById(userId);
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(testUser.getId());
+        assertThat(result.getUsername()).isEqualTo(testUser.getUsername());
+        assertThat(result.getPoint()).isEqualTo(testUser.getPoint());
+        assertThat(result.getRole()).isEqualTo(testUser.getRole());
+        verify(userRepository).getOrThrow(userId);
     }
 
     @Test
@@ -85,12 +84,12 @@ class GetUserUseCaseTest {
     void execute_UserNotFound_ThrowsException() {
         // given
         Long userId = 999L;
-        given(userRepository.findById(userId)).willReturn(Optional.empty());
+        given(userRepository.getOrThrow(userId)).willThrow(new UserNotFoundException("사용자를 찾을 수 없습니다."));
 
         // when & then
         assertThatThrownBy(() -> getUserUseCase.execute(userId))
             .isInstanceOf(UserNotFoundException.class)
             .hasMessage("사용자를 찾을 수 없습니다.");
-        verify(userRepository).findById(userId);
+        verify(userRepository).getOrThrow(userId);
     }
 }

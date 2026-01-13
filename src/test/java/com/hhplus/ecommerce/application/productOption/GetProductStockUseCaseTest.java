@@ -65,15 +65,15 @@ class GetProductStockUseCaseTest {
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.getProductId()).isEqualTo(testProduct.id());
-        assertThat(response.getProductName()).isEqualTo(testProduct.productName());
-        assertThat(response.getOptions()).hasSize(3);
+        assertThat(response.productId()).isEqualTo(testProduct.getId());
+        assertThat(response.productName()).isEqualTo(testProduct.getProductName());
+        assertThat(response.options()).hasSize(3);
 
-        List<StockOptionResponse> options = response.getOptions();
-        assertThat(options.get(0).getOptionId()).isEqualTo(1L);
-        assertThat(options.get(0).getOptionType()).isEqualTo("16GB RAM");
-        assertThat(options.get(0).getStock()).isEqualTo(50);
-        assertThat(options.get(0).getAdditionalPrice()).isEqualTo(100000);
+        List<StockOptionResponse> options = response.options();
+        assertThat(options.get(0).optionId()).isEqualTo(1L);
+        assertThat(options.get(0).optionType()).isEqualTo("16GB RAM");
+        assertThat(options.get(0).stock()).isEqualTo(50);
+        assertThat(options.get(0).additionalPrice()).isEqualTo(100000);
 
         verify(productRepository).findById(productId);
         verify(productOptionRepository).findByProductId(productId);
@@ -92,9 +92,9 @@ class GetProductStockUseCaseTest {
 
         // then
         assertThat(response).isNotNull();
-        assertThat(response.getProductId()).isEqualTo(testProduct.id());
-        assertThat(response.getProductName()).isEqualTo(testProduct.productName());
-        assertThat(response.getOptions()).isEmpty();
+        assertThat(response.productId()).isEqualTo(testProduct.getId());
+        assertThat(response.productName()).isEqualTo(testProduct.getProductName());
+        assertThat(response.options()).isEmpty();
 
         verify(productRepository).findById(productId);
         verify(productOptionRepository).findByProductId(productId);

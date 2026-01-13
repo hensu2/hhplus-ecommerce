@@ -9,16 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
 @RequiredArgsConstructor
 public class ProductOptionRepositoryImpl implements ProductOptionRepository {
 
     private final ProductOptionJpaRepository productOptionJpaRepository;
-
-    // 동시성 제어를 위한 ConcurrentHashMap (재고 차감용)
-    private final ConcurrentHashMap<Long, Object> stockLocks = new ConcurrentHashMap<>();
 
     @Override
     public List<ProductOptionEntity> findByProductId(Long productId) {
@@ -38,15 +34,11 @@ public class ProductOptionRepositoryImpl implements ProductOptionRepository {
     @Override
     @Transactional
     public ProductOptionEntity decreaseStock(Long optionId, long quantity) {
-        // ConcurrentHashMap을 사용한 동시성 제어
-        Object lock = stockLocks.computeIfAbsent(optionId, k -> new Object());
+        // 동시성 제어는 DecreaseStockUseCase에서 Redisson 분산 락으로 처리
+        ProductOptionEntity productOption = productOptionJpaRepository.findById(optionId)
+                .orElseThrow(() -> new IllegalArgumentException("상품 옵션을 찾을 수 없습니다."));
 
-        synchronized (lock) {
-            ProductOptionEntity productOption = productOptionJpaRepository.findByIdWithLock(optionId)
-                    .orElseThrow(() -> new IllegalArgumentException("상품 옵션을 찾을 수 없습니다."));
-
-            productOption.updateStock(StockUpdateType.DECREASE, (int) quantity);
-            return productOptionJpaRepository.save(productOption);
-        }
+        productOption.updateStock(StockUpdateType.DECREASE, (int) quantity);
+        return productOptionJpaRepository.save(productOption);
     }
 }

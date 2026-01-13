@@ -16,6 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 
@@ -37,12 +41,24 @@ class CreateOrderUseCaseTest {
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private RedissonClient redissonClient;
+
+    @Mock
+    private TransactionTemplate transactionTemplate;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private RLock lock;
+
     @InjectMocks
     private CreateOrderUseCase createOrderUseCase;
 
     @Test
     @DisplayName("주문 생성 성공")
-    void execute_Success() {
+    void execute_Success() throws Exception {
         // given
         Long userId = 1L;
         Long productId = 1L;
@@ -58,11 +74,24 @@ class CreateOrderUseCaseTest {
         CreateOrderRequest request = new CreateOrderRequest(userId, List.of(itemRequest), null);
 
         OrderEntity savedOrder = new OrderEntity(1L, userId, 22000, 0, 22000, null, OrderStatus.PENDING, 0L, 0L, 0L);
+        OrderItemEntity savedItem = new OrderItemEntity(1L, 1L, productId, optionId, "테스트 상품", "Red", quantity, 22000, 0L);
+
+        // Mock Redisson lock
+        when(redissonClient.getLock(anyString())).thenReturn(lock);
+        when(redissonClient.getMultiLock(any())).thenReturn(lock);
+        when(lock.tryLock(anyLong(), anyLong(), any())).thenReturn(true);
+
+        // Mock TransactionTemplate to execute the callback
+        when(transactionTemplate.execute(any())).thenAnswer(invocation -> {
+            org.springframework.transaction.support.TransactionCallback<?> callback = invocation.getArgument(0);
+            return callback.doInTransaction(null);
+        });
 
         when(productOptionRepository.getOrThrow(optionId)).thenReturn(option);
         when(productRepository.getOrThrow(productId)).thenReturn(product);
+        when(productOptionRepository.save(any(ProductOptionEntity.class))).thenReturn(option);
         when(orderRepository.save(any(OrderEntity.class))).thenReturn(savedOrder);
-        when(orderRepository.saveItem(any(OrderItemEntity.class))).thenReturn(any(OrderItemEntity.class));
+        when(orderRepository.saveItem(any(OrderItemEntity.class))).thenReturn(savedItem);
 
         // when
         OrderEntity result = createOrderUseCase.execute(request);
@@ -73,6 +102,6 @@ class CreateOrderUseCaseTest {
         assertThat(result.getStatus()).isEqualTo(OrderStatus.PENDING);
         verify(orderRepository, times(1)).save(any(OrderEntity.class));
         verify(orderRepository, times(1)).saveItem(any(OrderItemEntity.class));
-        verify(productOptionRepository, times(1)).decreaseStock(optionId, quantity);
+        verify(productOptionRepository, times(1)).save(any(ProductOptionEntity.class));
     }
 }

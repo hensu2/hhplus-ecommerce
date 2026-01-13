@@ -30,8 +30,8 @@ class UserTableTest {
         // then
         assertThat(users).isNotNull();
         assertThat(users).hasSize(3);
-        assertThat(users).extracting(UserEntity::id).containsExactlyInAnyOrder(1L, 2L, 3L);
-        assertThat(users).extracting(UserEntity::username).containsExactlyInAnyOrder("user123", "admin", "testuser");
+        assertThat(users).extracting(UserEntity::getId).containsExactlyInAnyOrder(1L, 2L, 3L);
+        assertThat(users).extracting(UserEntity::getUsername).containsExactlyInAnyOrder("user123", "admin", "testuser");
     }
 
     @Test
@@ -56,8 +56,8 @@ class UserTableTest {
 
         // then
         assertThat(result).isPresent();
-        assertThat(result.get().id()).isEqualTo(1L);
-        assertThat(result.get().username()).isEqualTo("user123");
+        assertThat(result.get().getId()).isEqualTo(1L);
+        assertThat(result.get().getUsername()).isEqualTo("user123");
     }
 
     @Test

@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
 @RequiredArgsConstructor
@@ -18,9 +17,6 @@ public class CouponRepositoryImpl implements CouponRepository {
 
     private final CouponJpaRepository couponJpaRepository;
     private final CouponHistoryJpaRepository couponHistoryJpaRepository;
-
-    // 동시성 제어를 위한 ConcurrentHashMap (쿠폰 재고 차감용)
-    private final ConcurrentHashMap<Long, Object> couponLocks = new ConcurrentHashMap<>();
 
     @Override
     public List<CouponEntity> findAll() {
@@ -55,15 +51,16 @@ public class CouponRepositoryImpl implements CouponRepository {
     @Override
     @Transactional
     public CouponEntity decreaseStock(long couponId) {
-        // ConcurrentHashMap을 사용한 동시성 제어
-        Object lock = couponLocks.computeIfAbsent(couponId, k -> new Object());
+        // 동시성 제어는 IssueCouponUseCase에서 Redisson 분산 락으로 처리
+        CouponEntity coupon = couponJpaRepository.findById(couponId)
+                .orElseThrow(() -> new IllegalArgumentException("쿠폰을 찾을 수 없습니다."));
 
-        synchronized (lock) {
-            CouponEntity coupon = couponJpaRepository.findByIdWithLock(couponId)
-                    .orElseThrow(() -> new IllegalArgumentException("쿠폰을 찾을 수 없습니다."));
+        coupon.decreaseStock();
+        return couponJpaRepository.save(coupon);
+    }
 
-            coupon.decreaseStock();
-            return couponJpaRepository.save(coupon);
-        }
+    @Override
+    public List<CouponHistoryEntity> saveAllHistories(List<CouponHistoryEntity> histories) {
+        return couponHistoryJpaRepository.saveAll(histories);
     }
 }

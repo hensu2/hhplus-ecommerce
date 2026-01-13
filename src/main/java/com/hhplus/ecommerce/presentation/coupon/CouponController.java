@@ -1,11 +1,13 @@
 package com.hhplus.ecommerce.presentation.coupon;
 
+import com.hhplus.ecommerce.application.coupon.CreateCouponUseCase;
 import com.hhplus.ecommerce.application.coupon.GetCouponUseCase;
 import com.hhplus.ecommerce.application.coupon.GetCouponsUseCase;
 import com.hhplus.ecommerce.application.coupon.GetMyCouponsUseCase;
 import com.hhplus.ecommerce.application.coupon.IssueCouponUseCase;
 import com.hhplus.ecommerce.domain.coupon.CouponEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponStatus;
+import com.hhplus.ecommerce.presentation.coupon.req.CreateCouponRequest;
 import com.hhplus.ecommerce.presentation.coupon.req.ValidateCouponRequest;
 import com.hhplus.ecommerce.presentation.coupon.res.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +26,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class CouponController {
 
+    private final CreateCouponUseCase createCouponUseCase;
     private final GetCouponsUseCase getCouponsUseCase;
     private final IssueCouponUseCase issueCouponUseCase;
     private final GetMyCouponsUseCase getMyCouponsUseCase;
@@ -40,6 +43,15 @@ public class CouponController {
         ));
     }
 
+    // 쿠폰 생성 (POST /api/coupons)
+    @Operation(summary = "쿠폰 생성", description = "관리자가 선착순 쿠폰을 생성합니다.")
+    @PostMapping
+    public ResponseEntity<CreateCouponResponse> createCoupon(@RequestBody CreateCouponRequest request) {
+        CouponEntity coupon = createCouponUseCase.execute(request);
+        CreateCouponResponse response = CreateCouponResponse.from(coupon);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     // 쿠폰 목록 조회 (GET /api/coupons)
     @Operation(summary = "쿠폰 목록 조회", description = "발급 가능한 쿠폰 목록을 조회합니다.")
     @GetMapping
@@ -52,14 +64,13 @@ public class CouponController {
     }
 
     // 쿠폰 발급 (POST /api/coupons/{couponId}/issue)
-    @Operation(summary = "쿠폰 발급", description = "선착순 쿠폰을 발급받습니다. 한정 수량이며, 동시성 제어가 적용됩니다.")
+    @Operation(summary = "쿠폰 발급", description = "선착순 쿠폰을 발급받습니다. 한정 수량이며, 비동기로 처리됩니다. 즉시 202 Accepted 응답을 반환합니다.")
     @PostMapping("/{couponId}/issue")
     public ResponseEntity<IssueCouponResponse> issueCoupon(
             @PathVariable Long couponId,
             @RequestParam Long userId) {
-        var history = issueCouponUseCase.execute(userId, couponId);
-        var coupon = getCouponUseCase.execute(couponId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new IssueCouponResponse(history, coupon));
+        IssueCouponResponse response = issueCouponUseCase.execute(userId, couponId);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
     @Operation(summary = "내 쿠폰 조회", description = "발급받은 쿠폰 목록을 조회합니다.")

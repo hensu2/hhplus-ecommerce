@@ -20,6 +20,11 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public Optional<UserEntity> findByIdWithPessimisticLock(Long id) {
+        return userJpaRepository.findByIdWithPessimisticLock(id);
+    }
+
+    @Override
     public List<UserEntity> findAll() {
         return userJpaRepository.findAll();
     }
