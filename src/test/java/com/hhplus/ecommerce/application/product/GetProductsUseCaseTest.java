@@ -1,6 +1,7 @@
 package com.hhplus.ecommerce.application.product;
 
 import com.hhplus.ecommerce.domain.product.ProductEntity;
+import com.hhplus.ecommerce.infrastructure.cache.ProductCacheService;
 import com.hhplus.ecommerce.infrastructure.product.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,11 +17,12 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("GetProductsUseCase 단위 테스트")
@@ -28,6 +30,9 @@ class GetProductsUseCaseTest {
 
     @Mock
     private ProductRepository productRepository;
+
+    @Mock
+    private ProductCacheService productCacheService;
 
     @InjectMocks
     private GetProductsUseCase getProductsUseCase;
@@ -45,11 +50,13 @@ class GetProductsUseCaseTest {
     }
 
     @Test
-    @DisplayName("전체 상품 목록을 조회한다")
-    void execute_ReturnsAllProducts() {
+    @DisplayName("캐시 미스 시 DB에서 상품 목록을 조회하고 캐시에 저장한다")
+    void execute_CacheMiss_ReturnsFromDBAndCache() {
         // given
         Pageable pageable = PageRequest.of(0, 20);
         Page<ProductEntity> productPage = new PageImpl<>(testProducts, pageable, testProducts.size());
+
+        given(productCacheService.getProductListCache(any(Pageable.class))).willReturn(Optional.empty());
         given(productRepository.findAll(any(Pageable.class))).willReturn(productPage);
 
         // when
@@ -71,7 +78,31 @@ class GetProductsUseCaseTest {
         assertThat(response.getContent().get(2).getId()).isEqualTo(3L);
         assertThat(response.getContent().get(2).getProductName()).isEqualTo("마우스");
 
+        verify(productCacheService).getProductListCache(any(Pageable.class));
         verify(productRepository).findAll(any(Pageable.class));
+        verify(productCacheService).setProductListCache(any(Pageable.class), any(Page.class));
+    }
+
+    @Test
+    @DisplayName("캐시 히트 시 DB 조회 없이 캐시에서 반환한다")
+    void execute_CacheHit_ReturnsFromCache() {
+        // given
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<ProductEntity> cachedPage = new PageImpl<>(testProducts, pageable, testProducts.size());
+
+        given(productCacheService.getProductListCache(any(Pageable.class))).willReturn(Optional.of(cachedPage));
+
+        // when
+        Page<ProductEntity> response = getProductsUseCase.execute(pageable);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.getContent()).hasSize(3);
+        assertThat(response.getTotalElements()).isEqualTo(3);
+
+        verify(productCacheService).getProductListCache(any(Pageable.class));
+        verify(productRepository, never()).findAll(any(Pageable.class));
+        verify(productCacheService, never()).setProductListCache(any(Pageable.class), any(Page.class));
     }
 
     @Test
@@ -80,6 +111,8 @@ class GetProductsUseCaseTest {
         // given
         Pageable pageable = PageRequest.of(0, 20);
         Page<ProductEntity> emptyPage = new PageImpl<>(List.of(), pageable, 0);
+
+        given(productCacheService.getProductListCache(any(Pageable.class))).willReturn(Optional.empty());
         given(productRepository.findAll(any(Pageable.class))).willReturn(emptyPage);
 
         // when
@@ -89,7 +122,10 @@ class GetProductsUseCaseTest {
         assertThat(response).isNotNull();
         assertThat(response.getContent()).isEmpty();
         assertThat(response.getTotalElements()).isEqualTo(0);
+
+        verify(productCacheService).getProductListCache(any(Pageable.class));
         verify(productRepository).findAll(any(Pageable.class));
+        verify(productCacheService).setProductListCache(any(Pageable.class), any(Page.class));
     }
 
     @Test
@@ -100,6 +136,8 @@ class GetProductsUseCaseTest {
         ProductEntity singleProduct = new ProductEntity(1L, 1L, "테스트 상품", "테스트 설명", 50000L, timestamp, timestamp);
         Pageable pageable = PageRequest.of(0, 20);
         Page<ProductEntity> productPage = new PageImpl<>(List.of(singleProduct), pageable, 1);
+
+        given(productCacheService.getProductListCache(any(Pageable.class))).willReturn(Optional.empty());
         given(productRepository.findAll(any(Pageable.class))).willReturn(productPage);
 
         // when
@@ -116,6 +154,8 @@ class GetProductsUseCaseTest {
         assertThat(product.getContent()).isEqualTo(singleProduct.getContent());
         assertThat(product.getPrice()).isEqualTo(singleProduct.getPrice());
 
+        verify(productCacheService).getProductListCache(any(Pageable.class));
         verify(productRepository).findAll(any(Pageable.class));
+        verify(productCacheService).setProductListCache(any(Pageable.class), any(Page.class));
     }
 }

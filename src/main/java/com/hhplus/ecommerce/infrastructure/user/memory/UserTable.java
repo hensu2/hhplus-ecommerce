@@ -15,9 +15,9 @@ public class UserTable {
     public UserTable() {
         // 초기 데이터
         long timestamp = System.currentTimeMillis();
-        table.put(1L, new UserEntity(1L, "user123", 50000L, "USER", timestamp, timestamp, null));
-        table.put(2L, new UserEntity(2L, "admin", 100000L, "ADMIN", timestamp, timestamp, null));
-        table.put(3L, new UserEntity(3L, "testuser", 30000L, "USER", timestamp, timestamp, null));
+        table.put(1L, new UserEntity(1L, "user123", 50000L, "USER", timestamp, timestamp));
+        table.put(2L, new UserEntity(2L, "admin", 100000L, "ADMIN", timestamp, timestamp));
+        table.put(3L, new UserEntity(3L, "testuser", 30000L, "USER", timestamp, timestamp));
     }
 
     public Optional<UserEntity> findById(Long id) {
@@ -31,7 +31,7 @@ public class UserTable {
     public UserEntity save(UserEntity user) {
         long id = ++cursor;
         long timestamp = System.currentTimeMillis();
-        UserEntity newUser = new UserEntity(id, user.getUsername(), user.getPoint(), user.getRole(), timestamp, timestamp, null);
+        UserEntity newUser = new UserEntity(id, user.getUsername(), user.getPoint(), user.getRole(), timestamp, timestamp);
         table.put(id, newUser);
         return newUser;
     }

@@ -2,13 +2,14 @@ package com.hhplus.ecommerce.application.product;
 
 import com.hhplus.ecommerce.domain.product.ProductStatisticsEntity;
 import com.hhplus.ecommerce.infrastructure.product.ProductStatisticsRepository;
-import com.hhplus.ecommerce.infrastructure.product.memory.ProductStatisticsTable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -20,9 +21,6 @@ class IncreaseProductViewUseCaseTest {
     @Mock
     private ProductStatisticsRepository productStatisticsRepository;
 
-    @Mock
-    private ProductStatisticsTable productStatisticsTable;
-
     @InjectMocks
     private IncreaseProductViewUseCase increaseProductViewUseCase;
 
@@ -31,17 +29,16 @@ class IncreaseProductViewUseCaseTest {
     void shouldIncreaseViewCountWhenStatisticsExist() {
         // given
         long productId = 1L;
-        ProductStatisticsEntity existingStats = new ProductStatisticsEntity(productId, 10, 5, System.currentTimeMillis());
-        ProductStatisticsEntity updatedStats = existingStats.increaseViewCount();
+        ProductStatisticsEntity existingStats = new ProductStatisticsEntity(productId, 10L, 5L, System.currentTimeMillis());
 
-        when(productStatisticsTable.incrementViewCount(productId)).thenReturn(updatedStats);
-        when(productStatisticsRepository.save(any())).thenReturn(updatedStats);
+        when(productStatisticsRepository.findByProductId(productId)).thenReturn(Optional.of(existingStats));
+        when(productStatisticsRepository.save(any())).thenReturn(existingStats);
 
         // when
         increaseProductViewUseCase.execute(productId);
 
         // then
-        verify(productStatisticsTable).incrementViewCount(productId);
+        verify(productStatisticsRepository).findByProductId(productId);
         verify(productStatisticsRepository).save(any(ProductStatisticsEntity.class));
     }
 
@@ -50,16 +47,16 @@ class IncreaseProductViewUseCaseTest {
     void shouldCreateNewStatisticsWhenNotExist() {
         // given
         long productId = 1L;
-        ProductStatisticsEntity newStats = new ProductStatisticsEntity(productId, 1, 0, System.currentTimeMillis());
+        ProductStatisticsEntity newStats = new ProductStatisticsEntity(productId, 0L, 0L, System.currentTimeMillis());
 
-        when(productStatisticsTable.incrementViewCount(productId)).thenReturn(newStats);
+        when(productStatisticsRepository.findByProductId(productId)).thenReturn(Optional.empty());
         when(productStatisticsRepository.save(any())).thenReturn(newStats);
 
         // when
         increaseProductViewUseCase.execute(productId);
 
         // then
-        verify(productStatisticsTable).incrementViewCount(productId);
+        verify(productStatisticsRepository).findByProductId(productId);
         verify(productStatisticsRepository).save(any(ProductStatisticsEntity.class));
     }
 
@@ -68,10 +65,10 @@ class IncreaseProductViewUseCaseTest {
     void shouldSaveAfterIncreasingViewCount() {
         // given
         long productId = 1L;
-        ProductStatisticsEntity updatedStats = new ProductStatisticsEntity(productId, 6, 3, System.currentTimeMillis());
+        ProductStatisticsEntity existingStats = new ProductStatisticsEntity(productId, 5L, 3L, System.currentTimeMillis());
 
-        when(productStatisticsTable.incrementViewCount(productId)).thenReturn(updatedStats);
-        when(productStatisticsRepository.save(any())).thenReturn(updatedStats);
+        when(productStatisticsRepository.findByProductId(productId)).thenReturn(Optional.of(existingStats));
+        when(productStatisticsRepository.save(any())).thenReturn(existingStats);
 
         // when
         increaseProductViewUseCase.execute(productId);

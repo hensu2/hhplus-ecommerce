@@ -27,6 +27,55 @@ spring:
         use_sql_comments: true
     open-in-view: false
 
+  # Redis Configuration for Test
+  data:
+    redis:
+      host: localhost
+      port: 9911
+      password:
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 10
+          min-idle: 2
+          max-wait: -1ms
+
+  # Kafka Configuration for Test (EmbeddedKafka will override bootstrap-servers)
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        max.in.flight.requests.per.connection: 5
+        enable.idempotence: true
+    consumer:
+      group-id: ecommerce-test-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "*"
+    listener:
+      ack-mode: manual
+
+# Redisson Configuration for Test
+spring.redis.redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://localhost:9911"
+      connectionPoolSize: 64
+      connectionMinimumIdleSize: 10
+      idleConnectionTimeout: 10000
+      connectTimeout: 10000
+      timeout: 3000
+      retryAttempts: 3
+      retryInterval: 1500
+
 # Logging
 logging:
   level:

@@ -84,7 +84,7 @@ public class CouponEntity {
             throw new IllegalStateException("쿠폰 재고가 부족합니다.");
         }
         this.stock = this.stock - 1;
-        // updatedAt은 @LastModifiedDate가 자동 관리
+        this.updatedAt = System.currentTimeMillis();
         return this;
     }
 }

@@ -5,7 +5,7 @@ spring:
   # Database Configuration (MySQL)
   datasource:
     url: jdbc:mysql://localhost:9910/ecommerce?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     username: hhplus
     password: hhplus1234
     hikari:
@@ -24,6 +24,58 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         use_sql_comments: true
     open-in-view: false
+
+  # Redis Configuration
+  data:
+    redis:
+      host: localhost
+      port: 9911
+      password:
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 10
+          min-idle: 2
+          max-wait: -1ms
+
+  # Kafka Configuration (3-broker cluster)
+  kafka:
+    bootstrap-servers: localhost:9092,localhost:9093,localhost:9094
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all  # 모든 ISR 브로커의 확인 대기 (데이터 손실 방지)
+      retries: 3
+      properties:
+        max.in.flight.requests.per.connection: 5
+        enable.idempotence: true  # 중복 메시지 방지
+        compression.type: snappy  # 네트워크 대역폭 절약
+        linger.ms: 10  # 배치 처리 최적화
+        batch.size: 32768  # 32KB 배치 크기
+    consumer:
+      group-id: ecommerce-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "*"
+    listener:
+      ack-mode: manual
+
+# Redisson Configuration
+spring.redis.redisson:
+  config: |
+    singleServerConfig:
+      address: "redis://localhost:9911"
+      connectionPoolSize: 64
+      connectionMinimumIdleSize: 10
+      idleConnectionTimeout: 10000
+      connectTimeout: 10000
+      timeout: 3000
+      retryAttempts: 3
+      retryInterval: 1500
 
 server:
   port: 8080

@@ -65,13 +65,13 @@ class GetPaymentsUseCaseTest {
             .thenReturn(Arrays.asList(payment1, payment2));
 
         // when
-        List<PaymentResponse> result = getPaymentsUseCase.execute(userId);
+        List<PaymentEntity> result = getPaymentsUseCase.execute(userId);
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).getPaymentId()).isEqualTo(1L);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
         assertThat(result.get(0).getAmount()).isEqualTo(30000);
-        assertThat(result.get(1).getPaymentId()).isEqualTo(2L);
+        assertThat(result.get(1).getId()).isEqualTo(2L);
         assertThat(result.get(1).getAmount()).isEqualTo(50000);
     }
 
@@ -82,7 +82,7 @@ class GetPaymentsUseCaseTest {
         when(paymentRepository.findByUserId(userId)).thenReturn(List.of());
 
         // when
-        List<PaymentResponse> result = getPaymentsUseCase.execute(userId);
+        List<PaymentEntity> result = getPaymentsUseCase.execute(userId);
 
         // then
         assertThat(result).isEmpty();
@@ -96,16 +96,16 @@ class GetPaymentsUseCaseTest {
             .thenReturn(Arrays.asList(payment1));
 
         // when
-        List<PaymentResponse> result = getPaymentsUseCase.execute(userId);
+        List<PaymentEntity> result = getPaymentsUseCase.execute(userId);
 
         // then
         assertThat(result).hasSize(1);
-        PaymentResponse response = result.get(0);
-        assertThat(response.getPaymentId()).isEqualTo(1L);
-        assertThat(response.getOrderId()).isEqualTo(1L);
-        assertThat(response.getUserId()).isEqualTo(userId);
-        assertThat(response.getAmount()).isEqualTo(30000);
-        assertThat(response.getStatus()).isEqualTo("COMPLETED");
-        assertThat(response.getCreatedAt()).isNotNull();
+        PaymentEntity payment = result.get(0);
+        assertThat(payment.getId()).isEqualTo(1L);
+        assertThat(payment.getOrderId()).isEqualTo(1L);
+        assertThat(payment.getUserId()).isEqualTo(userId);
+        assertThat(payment.getAmount()).isEqualTo(30000);
+        assertThat(payment.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
+        assertThat(payment.getCreatedAt()).isNotNull();
     }
 }

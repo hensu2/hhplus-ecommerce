@@ -1,6 +1,8 @@
 package com.hhplus.ecommerce.integration;
 
 import com.hhplus.ecommerce.application.user.ChargePointUseCase;
+import com.hhplus.ecommerce.application.user.UsePointUseCase;
+import com.hhplus.ecommerce.config.EmbeddedRedisConfig;
 import com.hhplus.ecommerce.domain.user.UserEntity;
 import com.hhplus.ecommerce.infrastructure.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -17,11 +20,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@ContextConfiguration(initializers = EmbeddedRedisConfig.class)
 @DisplayName("포인트 동시성 테스트")
 class PointConcurrencyTest {
 
     @Autowired
     private ChargePointUseCase chargePointUseCase;
+
+    @Autowired
+    private UsePointUseCase usePointUseCase;
 
     @Autowired
     private UserRepository userRepository;
@@ -149,5 +156,133 @@ class PointConcurrencyTest {
         }
 
         System.out.println("====================================================");
+    }
+
+    @Test
+    @DisplayName("동시성 제어 검증 - 포인트 사용 시 Redisson 분산 락으로 정확히 처리됨")
+    void concurrentPointUse_WithRedissonLock() throws InterruptedException {
+        // given
+        // 먼저 충분한 포인트를 충전
+        chargePointUseCase.execute(testUserId, 10000L);
+
+        UserEntity user = userRepository.getOrThrow(testUserId);
+        Long initialPoint = user.getPoint();
+
+        Long useAmount = 1000L; // 1회 사용 금액
+        int threadCount = 5; // 동시 사용 횟수
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+
+        // when - 같은 사용자가 동시에 5번 포인트 사용
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(() -> {
+                try {
+                    usePointUseCase.execute(testUserId, useAmount);
+                    successCount.incrementAndGet();
+                } catch (Exception e) {
+                    failCount.incrementAndGet();
+                    System.err.println("사용 실패: " + e.getMessage());
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+        executorService.shutdown();
+
+        // then
+        UserEntity updatedUser = userRepository.getOrThrow(testUserId);
+        Long finalPoint = updatedUser.getPoint();
+        Long expectedPoint = initialPoint - (useAmount * threadCount);
+        Long actualDecrease = initialPoint - finalPoint;
+
+        System.out.println("========== 포인트 사용 동시성 테스트 결과 (Redisson) ==========");
+        System.out.println("초기 포인트: " + initialPoint);
+        System.out.println("사용 시도 횟수: " + threadCount);
+        System.out.println("1회 사용 금액: " + useAmount);
+        System.out.println("성공한 사용 요청 수: " + successCount.get());
+        System.out.println("실패한 사용 요청 수: " + failCount.get());
+        System.out.println("예상 최종 포인트: " + expectedPoint);
+        System.out.println("실제 최종 포인트: " + finalPoint);
+        System.out.println("실제 감소 금액: " + actualDecrease);
+        System.out.println("============================================");
+
+        // Redisson 분산 락으로 동시성 제어 - 정확한 포인트 사용 보장
+        assertThat(finalPoint).isEqualTo(expectedPoint)
+                .withFailMessage("Redisson 분산 락으로 모든 사용이 정확히 반영되어야 합니다!");
+    }
+
+    @Test
+    @DisplayName("동시성 제어 검증 - 충전과 사용이 동시에 일어나도 정확히 처리됨")
+    void concurrentPointChargeAndUse_WithRedissonLock() throws InterruptedException {
+        // given
+        UserEntity user = userRepository.getOrThrow(testUserId);
+        Long initialPoint = user.getPoint();
+
+        Long chargeAmount = 2000L;
+        Long useAmount = 1000L;
+        int threadCount = 10; // 충전 5번, 사용 5번
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        AtomicInteger chargeSuccessCount = new AtomicInteger(0);
+        AtomicInteger useSuccessCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+
+        // when - 충전과 사용이 동시에 발생
+        for (int i = 0; i < threadCount / 2; i++) {
+            // 충전
+            executorService.submit(() -> {
+                try {
+                    chargePointUseCase.execute(testUserId, chargeAmount);
+                    chargeSuccessCount.incrementAndGet();
+                } catch (Exception e) {
+                    failCount.incrementAndGet();
+                    System.err.println("충전 실패: " + e.getMessage());
+                } finally {
+                    latch.countDown();
+                }
+            });
+
+            // 사용
+            executorService.submit(() -> {
+                try {
+                    usePointUseCase.execute(testUserId, useAmount);
+                    useSuccessCount.incrementAndGet();
+                } catch (Exception e) {
+                    failCount.incrementAndGet();
+                    System.err.println("사용 실패: " + e.getMessage());
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+        executorService.shutdown();
+
+        // then
+        UserEntity updatedUser = userRepository.getOrThrow(testUserId);
+        Long finalPoint = updatedUser.getPoint();
+        Long expectedPoint = initialPoint
+            + (chargeAmount * chargeSuccessCount.get())
+            - (useAmount * useSuccessCount.get());
+
+        System.out.println("========== 충전/사용 혼합 동시성 테스트 결과 (Redisson) ==========");
+        System.out.println("초기 포인트: " + initialPoint);
+        System.out.println("성공한 충전 요청 수: " + chargeSuccessCount.get());
+        System.out.println("성공한 사용 요청 수: " + useSuccessCount.get());
+        System.out.println("실패한 요청 수: " + failCount.get());
+        System.out.println("예상 최종 포인트: " + expectedPoint);
+        System.out.println("실제 최종 포인트: " + finalPoint);
+        System.out.println("==================================================");
+
+        // Redisson 분산 락으로 충전과 사용이 정확히 처리됨
+        assertThat(finalPoint).isEqualTo(expectedPoint)
+                .withFailMessage("Redisson 분산 락으로 충전과 사용이 정확히 반영되어야 합니다!");
     }
 }

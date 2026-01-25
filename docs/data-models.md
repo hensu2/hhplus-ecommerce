@@ -131,18 +131,6 @@ Table EXTERNAL_SYNC_LOG {
   created_at timestamp
   updated_at timestamp
 }
-
-Table PRODUCT_STATISTICS {
-  id integer [primary key]
-  product_id integer [ref: > PRODUCT.id]
-  sales_count integer
-  period_start timestamp
-  period_end timestamp
-  created_at timestamp
-  updated_at timestamp
-
-  // total_sales_amount는 제거 (집계 쿼리로 계산)
-}
 ```
 
 ---
@@ -388,30 +376,6 @@ Table PRODUCT_STATISTICS {
 
 ---
 
-### 12. PRODUCT_STATISTICS (상품 통계)
-인기 상품 조회를 위한 상품 판매 통계를 저장하는 테이블
-
-| 컬럼명 | 타입 | 설명 |
-|--------|------|------|
-| id | integer | 통계 ID (PK) |
-| product_id | integer | 상품 ID (FK) |
-| sales_count | integer | 판매 수량 |
-| total_sales_amount | integer | 총 판매 금액 |
-| period_start | timestamp | 집계 기간 시작일시 |
-| period_end | timestamp | 집계 기간 종료일시 |
-| created_at | timestamp | 생성일시 |
-| updated_at | timestamp | 수정일시 |
-
-**관계:**
-- PRODECT (N:1)
-
-**사용 목적:**
-- 최근 3일간 판매량 기준 Top 5 상품 조회
-- 스케줄러를 통해 주기적으로 집계 데이터 생성
-- 실시간 집계 부하 방지
-
----
-
 ## 🔗 관계도 요약
 
 ### USERS를 중심으로
@@ -430,8 +394,7 @@ USERS
 PRODECT
 ├── prodectOption (1:N) - 상품 옵션
 ├── CART (1:N) - 장바구니 아이템
-├── ORDER_ITEMS (1:N) - 주문 상품
-└── PRODUCT_STATISTICS (1:N) - 상품 통계
+└── ORDER_ITEMS (1:N) - 주문 상품
 ```
 
 ### ORDERS를 중심으로
@@ -480,11 +443,11 @@ ORDERS
 - 외부 전송 실패해도 주문은 정상 처리 유지
 
 ### 6. 인기 상품 관리
-- `PRODUCT_STATISTICS` 테이블에 상품 판매 통계 저장
-- 최근 3일간 판매량 기준으로 집계
-- 스케줄러를 통해 주기적으로 갱신 (예: 매 시간)
-- 인기 상품 조회 API는 이 테이블에서 Top 5 조회
-- 실시간 집계 대비 성능 향상
+- Redis 캐싱을 통한 인기 상품 통계 관리
+- Hash 구조로 상품별 조회수/판매량 저장: `product:stats:{productId}`
+- Sorted Set으로 인기도 순위 관리: `popular:products`
+- 인기도 점수 = (조회수 * 1) + (판매량 * 10)
+- 실시간 업데이트 및 빠른 조회 성능
 
 ---
 
@@ -499,13 +462,11 @@ CREATE INDEX idx_order_items_order_id ON ORDER_ITEMS(order_id);
 CREATE INDEX idx_order_items_product_id ON ORDER_ITEMS(product_id);
 CREATE INDEX idx_payments_order_id ON PAYMENTS(order_id);
 CREATE INDEX idx_external_sync_log_order_id ON EXTERNAL_SYNC_LOG(order_id);
-CREATE INDEX idx_product_statistics_product_id ON PRODUCT_STATISTICS(product_id);
 
 -- 복합 인덱스
 CREATE INDEX idx_cart_user_product ON CART(user_id, prodect_id);
 CREATE INDEX idx_coupons_history_status ON COUPONS_HISTORY(user_id, status);
 CREATE INDEX idx_external_sync_log_status ON EXTERNAL_SYNC_LOG(status, created_at);
-CREATE INDEX idx_product_statistics_period ON PRODUCT_STATISTICS(period_start, period_end, sales_count);
 
 -- 쿠폰 유효기간 조회용 인덱스
 CREATE INDEX idx_coupons_validity ON COUPONS(valid_from, valid_until);
@@ -530,10 +491,14 @@ CREATE INDEX idx_order_items_created ON ORDER_ITEMS(created_at, product_id);
 ---
 
 **작성일:** 2024-10-30
-**최종 수정일:** 2025-11-03
-**버전:** 1.2
+**최종 수정일:** 2025-11-27
+**버전:** 1.3
 
 **변경 이력:**
+- v1.3 (2025-11-27): Redis 캐싱 전환
+    - PRODUCT_STATISTICS 테이블 삭제
+    - 인기 상품 통계를 Redis로 관리 (Hash + Sorted Set)
+    - 인기 상품 관리 비즈니스 로직 업데이트
 - v1.2 (2025-11-03): API 스펙 기준 업데이트
     - POINT_HISTORY.description 필드 추가
     - ORDERS.point_discount, cancel_reason 필드 추가

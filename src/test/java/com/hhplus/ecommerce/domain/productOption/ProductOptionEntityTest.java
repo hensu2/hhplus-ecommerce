@@ -25,9 +25,9 @@ class ProductOptionEntityTest {
         ProductOptionEntity updated = testOption.updateStock(StockUpdateType.SET, 50);
 
         // then
-        assertThat(updated.stock()).isEqualTo(50);
-        assertThat(updated.id()).isEqualTo(testOption.id());
-        assertThat(updated.productId()).isEqualTo(testOption.productId());
+        assertThat(updated.getStock()).isEqualTo(50);
+        assertThat(updated.getId()).isEqualTo(testOption.getId());
+        assertThat(updated.getProductId()).isEqualTo(testOption.getProductId());
     }
 
     @Test
@@ -37,7 +37,7 @@ class ProductOptionEntityTest {
         ProductOptionEntity updated = testOption.updateStock(StockUpdateType.INCREASE, 30);
 
         // then
-        assertThat(updated.stock()).isEqualTo(130);
+        assertThat(updated.getStock()).isEqualTo(130);
     }
 
     @Test
@@ -47,7 +47,7 @@ class ProductOptionEntityTest {
         ProductOptionEntity updated = testOption.updateStock(StockUpdateType.DECREASE, 30);
 
         // then
-        assertThat(updated.stock()).isEqualTo(70);
+        assertThat(updated.getStock()).isEqualTo(70);
     }
 
     @Test
@@ -67,7 +67,7 @@ class ProductOptionEntityTest {
         ProductOptionEntity updated = testOption.updateStock(StockUpdateType.SET, 0);
 
         // then
-        assertThat(updated.stock()).isEqualTo(0);
+        assertThat(updated.getStock()).isEqualTo(0);
     }
 
     @Test
@@ -77,20 +77,20 @@ class ProductOptionEntityTest {
         ProductOptionEntity updated = testOption.updateStock(StockUpdateType.DECREASE, 100);
 
         // then
-        assertThat(updated.stock()).isEqualTo(0);
+        assertThat(updated.getStock()).isEqualTo(0);
     }
 
     @Test
     @DisplayName("updatedAt이 업데이트된다")
     void updateStock_UpdatesTimestamp() throws InterruptedException {
         // given
-        long beforeUpdate = testOption.updatedAt();
+        long beforeUpdate = testOption.getUpdatedAt();
         Thread.sleep(10);
 
         // when
         ProductOptionEntity updated = testOption.updateStock(StockUpdateType.SET, 50);
 
         // then
-        assertThat(updated.updatedAt()).isGreaterThan(beforeUpdate);
+        assertThat(updated.getUpdatedAt()).isGreaterThan(beforeUpdate);
     }
 }

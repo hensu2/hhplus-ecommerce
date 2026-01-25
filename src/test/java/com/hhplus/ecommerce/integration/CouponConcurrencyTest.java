@@ -1,6 +1,7 @@
 package com.hhplus.ecommerce.integration;
 
 import com.hhplus.ecommerce.application.coupon.IssueCouponUseCase;
+import com.hhplus.ecommerce.config.EmbeddedRedisConfig;
 import com.hhplus.ecommerce.domain.coupon.CouponEntity;
 import com.hhplus.ecommerce.domain.coupon.CouponHistoryEntity;
 import com.hhplus.ecommerce.infrastructure.coupon.CouponRepository;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -19,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@ContextConfiguration(initializers = EmbeddedRedisConfig.class)
 @DisplayName("쿠폰 동시성 테스트")
 class CouponConcurrencyTest {
 
@@ -104,9 +107,9 @@ class CouponConcurrencyTest {
         System.out.println("실제 최종 재고: " + finalStock);
         System.out.println("=========================================");
 
-        // ConcurrentHashMap.compute()로 동시성 제어 - 정확한 쿠폰 발급 보장
+        // Redisson 분산 락(Pub/Sub)으로 동시성 제어 - 정확한 쿠폰 발급 보장
         assertThat(finalStock).isEqualTo(expectedStock)
-                .withFailMessage("동시성 제어로 정확한 쿠폰 재고 차감이 되어야 합니다!");
+                .withFailMessage("Redisson 분산 락으로 정확한 쿠폰 재고 차감이 되어야 합니다!");
 
         // 재고는 음수가 될 수 없음
         assertThat(finalStock).isGreaterThanOrEqualTo(0)
